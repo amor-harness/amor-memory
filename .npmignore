@@ -1,0 +1,8 @@
+api/
+client/src/
+client/test/
+client/.test/
+runtime/test/
+runtime/db/src/
+config.json
+node_modules/

@@ -1,0 +1,52 @@
+{
+  "name": "@amor-harness/memory",
+  "version": "0.1.0",
+  "description": "Amor 记忆系统插件：记忆库、领域、抽取、召回、注入、VFS 与图片记忆。",
+  "license": "MIT",
+  "keywords": [
+    "amor",
+    "memory",
+    "agent",
+    "rag",
+    "cordis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amor-harness/amor-memory.git"
+  },
+  "homepage": "https://github.com/amor-harness/amor-memory#readme",
+  "bugs": {
+    "url": "https://github.com/amor-harness/amor-memory/issues"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    "plugin.json",
+    "config.example.json",
+    "README.md",
+    "docs/",
+    "runtime/index.mjs",
+    "runtime/db.mjs",
+    "runtime/db/*.mjs",
+    "runtime/backend/",
+    "runtime/recall/",
+    "runtime/extraction/",
+    "runtime/domain/",
+    "runtime/vfs/",
+    "client/dist/index.mjs"
+  ],
+  "scripts": {
+    "build": "esbuild client/src/index.js --bundle --format=esm --outfile=client/dist/index.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning",
+    "watch": "npm run build -- --watch",
+    "build:test": "esbuild client/test/entry.jsx --bundle --format=esm --outfile=client/.test/bundle.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning",
+    "pretest": "npm run build && npm run build:test",
+    "test": "node client/test/render.mjs && node client/test/interaction.mjs && node client/test/scope.mjs && npm run test:runtime",
+    "test:runtime": "node --test runtime/test/*.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "embedding": {
+    "MEMORY_EMBED_URL": "http://127.0.0.1:8788",
+    "MEMORY_EMBED_DIM": "1024"
+  },
+  "postgres": {
+    "MEMORY_PG_HOST": "vectordb"
+  },
+  "rerank": {
+    "MEMORY_RERANK_URL": "http://127.0.0.1:8787",
+    "MEMORY_RERANK_RELATIVE_MIN": "0.60",
+    "MEMORY_RERANK_TOP_MIN_SCORE": "0.20",
+    "MEMORY_RERANK_QUERY_MAX_CHARS": "400"
+  },
+  "recall": {
+    "MEMORY_RAG_CANDIDATES": "15",
+    "MEMORY_RAG_LIMIT": "3",
+    "MEMORY_RAG_MIN_SCORE": "0.45",
+    "MEMORY_RAG_GATE_MIN_SCORE": "0.36",
+    "MEMORY_RECALL_POOL_LIMIT": "8",
+    "MEMORY_RECALL_SHADOW": "false"
+  },
+  "tags": {
+    "MEMORY_TAG_SPECIFIC_MAX_COUNT": "3",
+    "MEMORY_TAG_MIN_DENSITY": "0.02",
+    "MEMORY_TAG_MIN_OCCURRENCES": "3",
+    "MEMORY_TAG_OCCURRENCE_PROMOTES_GENERIC": "true"
+  },
+  "images": {
+    "MEMORY_IMAGE_DIM": "1024",
+    "MEMORY_IMAGE_TEXT_MIN_SCORE": "0.22",
+    "MEMORY_IMAGE_IMAGE_QUERY_MIN_SCORE": "0.8"
+  },
+  "decay": {
+    "MEMORY_DECAY_ENABLED": "true",
+    "MEMORY_DECAY_HALF_LIFE_DAYS": "30",
+    "MEMORY_DECAY_FLOOR": "0.4",
+    "MEMORY_DECAY_ADMISSION": "true"
+  },
+  "mmr": {
+    "MEMORY_MMR_ENABLED": "true",
+    "MEMORY_MMR_LAMBDA": "0.5",
+    "MEMORY_MMR_SIM_FLOOR": "0.7",
+    "MEMORY_MMR_DUPLICATE_CUT": "0.6",
+    "MEMORY_MMR_MAX_PARTS_PER_KEY": "0"
+  },
+  "limits": {
+    "MEMORY_TOKEN_LIMIT": "1000000",
+    "MEMORY_CHAR_LIMIT": "10000"
+  }
+}

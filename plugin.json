@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "memory",
+  "version": "0.1.0",
+  "description": "记忆系统插件：记忆库、领域、召回、抽取、VFS 与图片记忆。",
+  "client": {
+    "entry": "./client/dist/index.mjs"
+  },
+  "runtime": {
+    "entry": "./runtime/index.mjs"
+  }
+}

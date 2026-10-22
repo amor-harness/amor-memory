@@ -1,0 +1,59 @@
+import mongoose from 'mongoose';
+import { models } from '../db.mjs';
+import { ownedStore, requirePermission, stripTags, tagsOf } from './memories.mjs';
+
+/** The conversation's memory links joined with their entries, newest first. */
+export async function listConversationMemories({ userId, role, storeId, conversationId }) {
+  await requirePermission({ userId, role, permissions: ['USE', 'READ'] });
+  if (!conversationId) {
+    throw Object.assign(new Error('conversationId is required.'), { status: 400 });
+  }
+  const store = await ownedStore({ userId, storeId });
+  if (!store) {
+    return { error: 404 };
+  }
+  const db = await models();
+  const user = new mongoose.Types.ObjectId(String(userId));
+  const links = await db.ConversationMemory.find({
+    userId: user,
+    conversationId,
+    storeId: String(store._id),
+  }).lean();
+  const keys = links.map((link) => link.key);
+  const entries = await db.MemoryEntry.find({
+    userId: user,
+    storeId: String(store._id),
+    key: { $in: keys },
+  }).lean();
+  const byKey = new Map(entries.map((entry) => [entry.key, entry]));
+  const domains = await db.MemoryDomain.find({ storeId: String(store._id) }).lean();
+  const domainNames = new Map(domains.map((domain) => [String(domain._id), domain.name]));
+  const memories = links
+    .map((link) => {
+      const entry = byKey.get(link.key);
+      if (!entry) {
+        return null;
+      }
+      return {
+        created: link.source === 'extracted' && link.createdByConversation === true,
+        key: entry.key,
+        value: entry.value,
+        content: stripTags(entry.value),
+        tags: tagsOf(entry),
+        ...(entry.domainId ? { domainId: entry.domainId } : {}),
+        ...(entry.domainId && domainNames.has(String(entry.domainId))
+          ? { domainName: domainNames.get(String(entry.domainId)) }
+          : {}),
+        stable: entry.stable === true,
+        ...(entry.locked === true ? { locked: true } : {}),
+        extracted: link.source === 'extracted',
+        recallCount: link.recallCount ?? 0,
+        ...(entry.lastRecalledAt ? { lastRecalledAt: entry.lastRecalledAt } : {}),
+        ...(entry.tokenCount != null ? { tokenCount: entry.tokenCount } : {}),
+        ...(entry.updated_at ? { updated_at: entry.updated_at } : {}),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime());
+  return { storeId: String(store._id), conversationId, memories };
+}
