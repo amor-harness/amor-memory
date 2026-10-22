@@ -55,5 +55,21 @@
     "name": "Amor",
     "email": "amor@gilatod.art",
     "url": "https://github.com/amor-harness"
+  },
+  "peerDependencies": {
+    "@amor-harness/database": "^0.1.0",
+    "@amor-harness/permissions": "^0.1.0",
+    "@amor-harness/agent-runtime": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@amor-harness/database": {
+      "optional": true
+    },
+    "@amor-harness/permissions": {
+      "optional": true
+    },
+    "@amor-harness/agent-runtime": {
+      "optional": true
+    }
   }
 }

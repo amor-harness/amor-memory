@@ -20,11 +20,6 @@
     "pgvector",
     "cordis"
   ],
-  "required": [
-    "database",
-    "permissions",
-    "agent-runtime"
-  ],
   "client": {
     "entry": "./client/dist/index.mjs"
   },
