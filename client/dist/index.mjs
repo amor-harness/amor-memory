@@ -395,6 +395,7 @@ function useMutation(options) {
   const [isPending, setPending] = state.React.useState(false);
   const mutate = (vars, local = {}) => {
     setPending(true);
+    options.onMutate?.(vars);
     Promise.resolve().then(() => options.mutationFn(vars)).then((data) => {
       setPending(false);
       options.onSuccess?.(data);
@@ -538,6 +539,7 @@ function useMutation2(method, options = {}) {
   const queryClient = useQueryClient();
   const result = useMutation({
     mutationFn: (vars) => currentApi().call(method, vars ?? {}),
+    onMutate: (vars, context) => options.onMutate?.(vars, context),
     onSuccess: (data) => {
       if (options.invalidate !== false) {
         queryClient.invalidateQueries();

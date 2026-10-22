@@ -25,6 +25,7 @@ function useMutation(method, options = {}) {
   const queryClient = useQueryClient();
   const result = useHostMutation({
     mutationFn: (vars) => currentApi().call(method, vars ?? {}),
+    onMutate: (vars, context) => options.onMutate?.(vars, context),
     onSuccess: (data) => {
       if (options.invalidate !== false) {
         queryClient.invalidateQueries();

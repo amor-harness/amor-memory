@@ -230,6 +230,7 @@ export function useMutation(options) {
   const [isPending, setPending] = state.React.useState(false);
   const mutate = (vars, local = {}) => {
     setPending(true);
+    options.onMutate?.(vars);
     Promise.resolve()
       .then(() => options.mutationFn(vars))
       .then((data) => {
