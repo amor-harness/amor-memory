@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { models, connectDb } from '../db.mjs';
+import { connectAppDb, models } from '../db.mjs';
 import { requirePermission } from './memories.mjs';
 import { dropEntryVector } from './vectors.mjs';
 
@@ -176,9 +176,10 @@ export async function setActiveDomains({ userId, role, storeId, conversationId, 
     return fail(404, 'Memory store not found.');
   }
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
-  const conn = await connectDb();
-  const convo = await conn.collection('conversations').findOne({ conversationId, user });
+  const conn = await connectAppDb();
+  const convo = await conn
+    .collection('conversations')
+    .findOne({ conversationId, user: String(userId) });
   if (!convo) {
     return fail(404, 'Conversation not found.');
   }

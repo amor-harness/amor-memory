@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
 import {
   MEMORY_DOMAIN_TOOL_DEFINITIONS,
   createMemoryDomainRuntime,
   resolveMemoryDomainScope,
 } from './domain.mjs';
+import { connectAppDb } from '../db.mjs';
 import { extractionMethods } from '../extraction/database.mjs';
 import { writableStore } from '../backend/memories.mjs';
 
@@ -16,12 +16,13 @@ async function buildRuntime(context) {
     return null;
   }
   const methods = await extractionMethods();
+  const app = await connectAppDb();
   const conversationId = context.conversationId ?? '';
-  const userObjectId = new mongoose.Types.ObjectId(String(context.userId));
-  const conversations = mongoose.connection.collection('conversations');
+  const user = String(context.userId);
+  const conversations = app.collection('conversations');
   let agentDomainIds = context.agentDomainIds;
   if (!Array.isArray(agentDomainIds) && context.agentId) {
-    const agent = await mongoose.connection
+    const agent = await app
       .collection('agents')
       .findOne({ id: context.agentId }, { projection: { memory_domains: 1 } });
     agentDomainIds = agent?.memory_domains;
@@ -39,7 +40,7 @@ async function buildRuntime(context) {
         }
         const convo = await conversations.findOne({
           conversationId,
-          user: userObjectId,
+          user,
         });
         return convo?.activeDomainIds;
       },
@@ -48,7 +49,7 @@ async function buildRuntime(context) {
           return;
         }
         await conversations.updateOne(
-          { conversationId, user: userObjectId },
+          { conversationId, user },
           { $set: { activeDomainIds: domainIds } },
         );
       },

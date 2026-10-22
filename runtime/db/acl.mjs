@@ -13,9 +13,10 @@ function permissionBitSupersets(requiredBits) {
 /** ACL helpers the memory store layer needs. They mirror data-schemas'
  *  aclEntry/userGroup methods, but read through the plugin's mongoose models. */
 export function createAclDeps(mongoose) {
+  const connection = mongoose.connection ?? mongoose;
   const principalsFor = async ({ userId, role, idOnTheSource }) => {
-    const users = mongoose.connection.collection('users');
-    const groups = mongoose.connection.collection('groups');
+    const users = connection.collection('users');
+    const groups = connection.collection('groups');
     const userObjectId =
       typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
     let userRole = role;
@@ -56,7 +57,7 @@ export function createAclDeps(mongoose) {
   return {
     getUserPrincipals: principalsFor,
     async findAccessibleResources(principals, resourceType, requiredPermission) {
-      const aclEntries = mongoose.connection.collection('aclentries');
+      const aclEntries = connection.collection('aclentries');
       return aclEntries.find({
         $or: principalQuery(principals),
         resourceType,
@@ -67,7 +68,7 @@ export function createAclDeps(mongoose) {
       if (!Array.isArray(resourceIds) || resourceIds.length === 0) {
         return new Map();
       }
-      const aclEntries = mongoose.connection.collection('aclentries');
+      const aclEntries = connection.collection('aclentries');
       const entries = await aclEntries.find({
         $or: principalQuery(principals),
         resourceType,

@@ -85,35 +85,12 @@ export default {
     );
     /** Owned stores are served by the plugin's own data layer; a store that
      *  isn't owned yet falls through to the app until ACL reads move too. */
-    const localFirst = async (localFn, remoteMethod, params, meta) => {
-      try {
-        const result = await localFn();
-        if (result != null && result.error == null) {
-          return result;
-        }
-      } catch (error) {
-        if (error?.status !== 404) {
-          throw error;
-        }
-      }
-      return kernel.call(remoteMethod, {
-        ...params,
-        userId: meta?.userId,
-        role: meta?.role,
-      });
-    };
+    const localFirst = async (localFn) => localFn();
 
-    const localWrite = async (operation, remoteMethod, params, meta) => {
+    const localWrite = async (operation) => {
       const result = await operation();
       if (result.ok === true) {
         return result;
-      }
-      if (result.status === 404) {
-        return kernel.call(remoteMethod, {
-          ...params,
-          userId: meta?.userId,
-          role: meta?.role,
-        });
       }
       throw Object.assign(new Error(result.error), { status: result.status ?? 400 });
     };
@@ -253,17 +230,10 @@ export default {
         conversationId: params?.conversationId,
       }),
     );
-    const localMutation = async (operation, remoteMethod, params, meta) => {
+    const localMutation = async (operation) => {
       const result = await operation();
       if (result.ok === true) {
         return result;
-      }
-      if (result.status === 404) {
-        return kernel.call(remoteMethod, {
-          ...params,
-          userId: meta?.userId,
-          role: meta?.role,
-        });
       }
       throw Object.assign(new Error(result.error), { status: result.status ?? 400 });
     };

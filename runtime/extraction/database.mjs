@@ -11,7 +11,7 @@ export async function extractionMethods() {
     methodsPromise = (async () => {
       const connection = await connectDb();
       const app = await connectAppDb();
-      const db = createMemoryDb(connection, createAclDeps(app));
+      const db = createMemoryDb(connection, createAclDeps(app), app);
       return db.methods;
     })().catch((error) => {
       methodsPromise = null;

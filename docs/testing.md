@@ -62,7 +62,7 @@ File: /memory/INDEX.yaml
 调用 search_domains 搜索“潮汐岛”，只回复结果。
 ```
 
-2. 期待模型调用 `memory__search_domains`，输出 domain 列表。
+2. 期待模型调用 `search_domains`，输出 domain 列表。
 
 ### 图片
 

@@ -222,7 +222,11 @@ export default function MemoryScopeDialog({
     } else {
       ids.delete(domain.id);
     }
-    setActive.mutate({ conversationId, domainIds: [...ids] });
+    setActive.mutate({
+      conversationId,
+      storeId: domainData?.storeId,
+      domainIds: [...ids],
+    });
   };
 
   const spinner = <Spinner className="my-2 size-4" />;

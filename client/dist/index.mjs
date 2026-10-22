@@ -2916,7 +2916,11 @@ function MemoryScopeDialog({
     } else {
       ids.delete(domain.id);
     }
-    setActive.mutate({ conversationId, domainIds: [...ids] });
+    setActive.mutate({
+      conversationId,
+      storeId: domainData?.storeId,
+      domainIds: [...ids]
+    });
   };
   const spinner = /* @__PURE__ */ h(Spinner, { className: "my-2 size-4" });
   const errorLine = /* @__PURE__ */ h("p", { className: "text-xs text-text-secondary", role: "alert" }, localize("com_ui_error"));

@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import mongoose from 'mongoose';
+import { connectAppDb } from '../db.mjs';
 import { extractionMethods } from './database.mjs';
 import { writableStore } from '../backend/memories.mjs';
 import { getExtractionPrompt } from '../backend/extraction-prompt.mjs';
@@ -43,28 +44,27 @@ function toMessages(rows) {
 }
 
 async function conversationDomains({ userId, conversationId }) {
-  const Conversation = mongoose.models.Conversation;
-  if (!Conversation || !conversationId) {
+  if (!conversationId) {
     return undefined;
   }
-  const convo = await Conversation.findOne({
-    conversationId,
-    user: userId,
-  })
-    .select('activeDomainIds')
-    .lean();
+  const app = await connectAppDb();
+  const convo = await app
+    .collection('conversations')
+    .findOne({ conversationId, user: String(userId) }, { projection: { activeDomainIds: 1 } });
   return Array.isArray(convo?.activeDomainIds) ? convo.activeDomainIds : undefined;
 }
 
 async function setConversationDomains({ userId, conversationId, domainIds }) {
-  const Conversation = mongoose.models.Conversation;
-  if (!Conversation || !conversationId) {
+  if (!conversationId) {
     return;
   }
-  await Conversation.updateOne(
-    { conversationId, user: userId },
-    { $set: { activeDomainIds: domainIds } },
-  );
+  const app = await connectAppDb();
+  await app
+    .collection('conversations')
+    .updateOne(
+      { conversationId, user: String(userId) },
+      { $set: { activeDomainIds: domainIds } },
+    );
 }
 
 /** Builds the original processor and runs one extraction window. */

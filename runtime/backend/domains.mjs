@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { connectDb, models } from '../db.mjs';
+import { connectAppDb, models } from '../db.mjs';
 import { ownedStore, requirePermission } from './memories.mjs';
 
 const toClientDomain = (domain) => ({
@@ -30,10 +30,10 @@ export async function listDomains({ userId, role, storeId, conversationId }) {
   const byDomain = new Map(counts.map((row) => [row._id ?? '', row.n]));
   let activeDomainIds;
   if (typeof conversationId === 'string' && conversationId !== '') {
-    const conn = await connectDb();
+    const conn = await connectAppDb();
     const convo = await conn
       .collection('conversations')
-      .findOne({ conversationId, user: user });
+      .findOne({ conversationId, user: String(userId) });
     if (convo && Array.isArray(convo.activeDomainIds)) {
       const known = new Set(rows.map((row) => String(row._id)));
       activeDomainIds = convo.activeDomainIds.filter((id) => known.has(String(id)));

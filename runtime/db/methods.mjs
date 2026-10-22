@@ -355,7 +355,7 @@ var LOCKED_UPDATE_REASON = "Cannot update a locked memory. Unlock it in the Memo
 var LOCKED_DELETE_REASON = "Cannot delete a locked memory. Unlock it in the Memories panel first.";
 var isLocked = (entry) => entry?.locked === true;
 var injectionOf = (value) => value === "additional" ? "additional" : "system";
-function createMemoryMethods(mongoose) {
+function createMemoryMethods(mongoose, appMongoose = mongoose) {
   async function createMemory({
     userId,
     key,
@@ -894,14 +894,14 @@ function createMemoryMethods(mongoose) {
     messageIds
   }) {
     const times = /* @__PURE__ */ new Map();
-    const Message = mongoose.models.Message;
-    if (!Message || messageIds.length === 0) {
+    if (messageIds.length === 0) {
       return times;
     }
-    const rows = await Message.find(
+    const appConnection = appMongoose.connection ?? appMongoose;
+    const rows = await appConnection.collection('messages').find(
       { user: String(userId), conversationId, messageId: { $in: messageIds } },
-      { messageId: 1, createdAt: 1 }
-    ).lean();
+      { projection: { messageId: 1, createdAt: 1 } }
+    ).toArray();
     for (const row of rows) {
       if (row.createdAt) {
         times.set(row.messageId, row.createdAt);
@@ -2305,9 +2305,9 @@ function frameMemorySection(value, section, documentValue) {
 }
 
 // runtime/db/src/methods.ts
-function createMemoryMethodSet(mongoose, deps) {
+function createMemoryMethodSet(mongoose, deps, appMongoose = mongoose) {
   return {
-    ...createMemoryMethods(mongoose),
+    ...createMemoryMethods(mongoose, appMongoose),
     ...createMemoryStoreMethods(mongoose, deps),
     ...createMemoryDomainMethods(mongoose),
     ...createMemoryImageMethods(mongoose),
