@@ -126,7 +126,7 @@ function MemoryStoreRow({
               resourceDbId={store.id}
               resourceName={store.name}
               resourceType={ResourceType.MEMORYSTORE}
-              onGrantAccess={() => queryClient.invalidateQueries([QueryKeys.memoryStores])}
+              onGrantAccess={() => queryClient.invalidateQueries({ queryKey: [QueryKeys.memoryStores] })}
             >
               <TooltipAnchor
                 description={localize('com_ui_share')}

@@ -540,20 +540,27 @@ function useMutation2(method, options = {}) {
   const result = useMutation({
     mutationFn: (vars) => currentApi().call(method, vars ?? {}),
     onMutate: (vars, context) => options.onMutate?.(vars, context),
-    onSuccess: (data) => {
+    onSuccess: (data, variables, context) => {
       if (options.invalidate !== false) {
         queryClient.invalidateQueries();
       }
-      options.onSuccess?.(data);
+      options.onSuccess?.(data, variables, context);
     },
-    onError: (error) => options.onError?.(error)
+    onError: (error, variables, context) => options.onError?.(error, variables, context),
+    onSettled: (data, error, variables, context) => options.onSettled?.(data, error, variables, context)
   });
   return {
     mutate: (vars, local = {}) => result.mutate(vars, {
       onSuccess: local.onSuccess,
-      onError: local.onError
+      onError: local.onError,
+      onSettled: local.onSettled
     }),
-    isLoading: result.isPending
+    isLoading: result.isPending,
+    isSuccess: result.isSuccess,
+    isError: result.isError,
+    error: result.error,
+    data: result.data,
+    reset: result.reset
   };
 }
 function useMemoriesQuery(storeId, options = {}) {
@@ -630,11 +637,7 @@ var useDeleteMemoryDomainMutation = (options) => useMutation2("memories.domains.
 var useUpdateMemoryPreferencesMutation = (options) => useMutation2("memories.preferences.set", options);
 var useRestoreMemoryVersionMutation = (options) => useMutation2("memories.versions.restore", options);
 function useUpdateMemoryPermissionsMutation(options = {}) {
-  const result = useMutation2("memories.permissions.set", {
-    ...options,
-    onSuccess: (data) => options.onSuccess?.(data)
-  });
-  return { ...result, isSuccess: false };
+  return useMutation2("memories.permissions.set", options);
 }
 
 // client/src/components/MemoryDomainDeleteDialog.tsx
@@ -1590,7 +1593,7 @@ function MemoryStoreRow({
         resourceDbId: store.id,
         resourceName: store.name,
         resourceType: ResourceType.MEMORYSTORE,
-        onGrantAccess: () => queryClient.invalidateQueries([QueryKeys.memoryStores])
+        onGrantAccess: () => queryClient.invalidateQueries({ queryKey: [QueryKeys.memoryStores] })
       },
       /* @__PURE__ */ h(
         TooltipAnchor,
