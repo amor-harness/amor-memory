@@ -125,9 +125,33 @@ conversationMemorySchema.index({ userId: 1, conversationId: 1, key: 1 }, { uniqu
 
 let connection = null;
 let connecting = null;
+let sharedConnection = null;
+
+/** Reuse a connection owned by the database plugin. */
+export function configureDatabase(db) {
+  sharedConnection = db ?? null;
+}
+
+function registerModels(conn) {
+  conn.model('MemoryEntry', memoryEntrySchema);
+  conn.model('MemoryStore', memoryStoreSchema);
+  conn.model('MemoryDomain', memoryDomainSchema);
+  conn.model('MemoryVersion', memoryVersionSchema);
+  conn.model('MemoryImage', memoryImageSchema);
+  conn.model('MemoryImageCounter', memoryImageCounterSchema);
+  conn.model('ConversationMemory', conversationMemorySchema);
+  conn.model('MemoryExtractionPrompt', memoryExtractionPromptSchema);
+}
 
 /** The plugin's own connection. Lazy so importing the backend never opens one. */
 export async function connectDb() {
+  if (sharedConnection != null) {
+    if (connection !== sharedConnection) {
+      registerModels(sharedConnection);
+      connection = sharedConnection;
+    }
+    return sharedConnection;
+  }
   if (connection != null) {
     return connection;
   }
@@ -140,14 +164,7 @@ export async function connectDb() {
       .createConnection(uri)
       .asPromise()
       .then((conn) => {
-        conn.model('MemoryEntry', memoryEntrySchema);
-        conn.model('MemoryStore', memoryStoreSchema);
-        conn.model('MemoryDomain', memoryDomainSchema);
-        conn.model('MemoryVersion', memoryVersionSchema);
-        conn.model('MemoryImage', memoryImageSchema);
-        conn.model('MemoryImageCounter', memoryImageCounterSchema);
-        conn.model('ConversationMemory', conversationMemorySchema);
-        conn.model('MemoryExtractionPrompt', memoryExtractionPromptSchema);
+        registerModels(conn);
         connection = conn;
         return conn;
       })

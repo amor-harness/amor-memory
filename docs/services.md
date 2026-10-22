@@ -154,7 +154,13 @@ Authorization: Bearer <MEMORY_RERANK_TOKEN>   # 可选
 
 ## 3. pgvector 表要求
 
-服务本身不创建表；部署时必须已有：
+memory 启动时会自动创建扩展和表：
+
+- `CREATE EXTENSION IF NOT EXISTS vector`；
+- `memory_vectors`；
+- `image_vectors`。
+
+如果表已经存在，`CREATE TABLE IF NOT EXISTS` 不会覆盖；列维度必须与当前 embedding 模型一致。
 
 ```sql
 CREATE TABLE memory_vectors (

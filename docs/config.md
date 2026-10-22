@@ -29,6 +29,8 @@
 
 ### postgres
 
+memory 启动时会用这些值向 `database` 插件申请共享连接池，并确保 pgvector 表存在。
+
 | 键 | 作用 |
 |---|---|
 | `MEMORY_PG_HOST` | pgvector 主机 |

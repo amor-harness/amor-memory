@@ -2,13 +2,23 @@ import { Pool } from 'pg';
 import { memoryEnv } from './env.mjs';
 
 let pool = null;
+let sharedPool = null;
 let schemaReady = false;
+
+/** Reuse a pool owned by the database plugin. */
+export function configurePool(next) {
+  sharedPool = next ?? null;
+  pool = null;
+}
 
 export function isEnabled() {
   return memoryEnv('MEMORY_PG_HOST') !== undefined && memoryEnv('MEMORY_PG_HOST') !== '';
 }
 
 export function getPool() {
+  if (sharedPool != null) {
+    return sharedPool;
+  }
   if (pool == null) {
     pool = new Pool({
       host: memoryEnv('MEMORY_PG_HOST') || 'vectordb',

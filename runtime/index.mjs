@@ -35,12 +35,31 @@ function flatten(value, out) {
 
 export default {
   name: 'memory',
-  inject: ['kernel', 'access', 'agentRuntime', 'tools'],
+  inject: ['kernel', 'access', 'agentRuntime', 'tools', 'database'],
   async apply(ctx, config) {
     const kernel = ctx.kernel;
     const access = ctx.access;
     const values = flatten(config, {});
     setConfig(values);
+    try {
+      if (ctx.database?.mongo != null) {
+        configureDatabase(ctx.database.mongo);
+      }
+      const pgConfig = {
+        host: values.MEMORY_PG_HOST || '',
+        port: Number(values.MEMORY_PG_PORT || 5432),
+        database: values.MEMORY_PG_DB || '',
+        user: values.MEMORY_PG_USER || '',
+        password: values.MEMORY_PG_PASSWORD || '',
+      };
+      if (ctx.database?.postgres != null && pgConfig.host !== '') {
+        const pool = await ctx.database.postgres(pgConfig);
+        configurePool(pool);
+        await ensureMemorySchema(pool);
+      }
+    } catch (error) {
+      console.error('[memory] database setup failed:', error?.message ?? error);
+    }
     registerMemoryVectorSync();
     registerDomainTools(ctx.tools);
     await kernel.call('memory.config.apply', { values });
