@@ -67,7 +67,9 @@ function useMutation(method, options = {}) {
       .call(method, vars ?? {})
       .then((data) => {
         setLoading(false);
-        bump();
+        if (options.invalidate !== false) {
+          bump();
+        }
         options.onSuccess?.(data);
         local.onSuccess?.(data);
       })

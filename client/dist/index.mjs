@@ -519,7 +519,9 @@ function useMutation(method, options = {}) {
     setLoading(true);
     api.call(method, vars ?? {}).then((data) => {
       setLoading(false);
-      bump();
+      if (options.invalidate !== false) {
+        bump();
+      }
       options.onSuccess?.(data);
       local.onSuccess?.(data);
     }).catch((error) => {
@@ -2868,7 +2870,8 @@ function MemoryScopeDialog({
     isLoading: memoriesLoading,
     isError: memoriesError
   } = useConversationMemoriesQuery(conversationId, void 0, { enabled });
-  const setActive = useSetMemoryDomainActiveMutation();
+  const setActive = useSetMemoryDomainActiveMutation({ invalidate: false });
+  const [optimisticActiveIds, setOptimisticActiveIds] = useState(null);
   const domains = domainData?.domains ?? [];
   const memories = conversationData?.memories ?? [];
   const domainById = useMemo(
@@ -2880,13 +2883,16 @@ function MemoryScopeDialog({
     [domains]
   );
   const activeIds = useMemo(() => {
-    const stored = domainData?.activeDomainIds;
+    const stored = optimisticActiveIds ?? domainData?.activeDomainIds;
     const ids = new Set(stored ?? []);
     if (stored == null && defaultDomain != null) {
       ids.add(defaultDomain.id);
     }
     return ids;
-  }, [domainData?.activeDomainIds, defaultDomain]);
+  }, [optimisticActiveIds, domainData?.activeDomainIds, defaultDomain]);
+  useEffect(() => {
+    setOptimisticActiveIds(null);
+  }, [domainData?.activeDomainIds]);
   const recalled = useMemo(() => memories.filter((memory) => memory.recallCount > 0), [memories]);
   const recalledGroups = useMemo(() => {
     const groups = /* @__PURE__ */ new Map();
@@ -2916,11 +2922,19 @@ function MemoryScopeDialog({
     } else {
       ids.delete(domain.id);
     }
-    setActive.mutate({
-      conversationId,
-      storeId: domainData?.storeId,
-      domainIds: [...ids]
-    });
+    const nextIds = [...ids];
+    setOptimisticActiveIds(nextIds);
+    setActive.mutate(
+      {
+        conversationId,
+        storeId: domainData?.storeId,
+        domainIds: nextIds
+      },
+      {
+        onSuccess: (data) => setOptimisticActiveIds(data?.activeDomainIds ?? nextIds),
+        onError: () => setOptimisticActiveIds(null)
+      }
+    );
   };
   const spinner = /* @__PURE__ */ h(Spinner, { className: "my-2 size-4" });
   const errorLine = /* @__PURE__ */ h("p", { className: "text-xs text-text-secondary", role: "alert" }, localize("com_ui_error"));

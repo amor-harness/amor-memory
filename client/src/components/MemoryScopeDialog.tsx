@@ -1,5 +1,5 @@
 import { h, Fragment } from '../runtime.js';
-import { useMemo, useState } from '../runtime.js';
+import { useEffect, useMemo, useState } from '../runtime.js';
 import { OGDialog, OGDialogTemplate, Spinner, Switch } from '../runtime.js';
 import type { TConversationMemory, TMemoryDomain } from '../sdk.js';
 import MemoryDomainChip from './MemoryDomainChip.tsx';
@@ -153,7 +153,8 @@ export default function MemoryScopeDialog({
     isError: memoriesError,
   } = useConversationMemoriesQuery(conversationId, undefined, { enabled });
 
-  const setActive = useSetMemoryDomainActiveMutation();
+  const setActive = useSetMemoryDomainActiveMutation({ invalidate: false });
+  const [optimisticActiveIds, setOptimisticActiveIds] = useState<string[] | null>(null);
 
   const domains = domainData?.domains ?? [];
   const memories = conversationData?.memories ?? [];
@@ -173,13 +174,17 @@ export default function MemoryScopeDialog({
    *  which means every domain was closed. Only a conversation that never chose
    *  falls back to the default domain, the same floor the runtime uses. */
   const activeIds = useMemo(() => {
-    const stored = domainData?.activeDomainIds;
+    const stored = optimisticActiveIds ?? domainData?.activeDomainIds;
     const ids = new Set(stored ?? []);
     if (stored == null && defaultDomain != null) {
       ids.add(defaultDomain.id);
     }
     return ids;
-  }, [domainData?.activeDomainIds, defaultDomain]);
+  }, [optimisticActiveIds, domainData?.activeDomainIds, defaultDomain]);
+
+  useEffect(() => {
+    setOptimisticActiveIds(null);
+  }, [domainData?.activeDomainIds]);
 
   const recalled = useMemo(() => memories.filter((memory) => memory.recallCount > 0), [memories]);
 
@@ -222,11 +227,19 @@ export default function MemoryScopeDialog({
     } else {
       ids.delete(domain.id);
     }
-    setActive.mutate({
-      conversationId,
-      storeId: domainData?.storeId,
-      domainIds: [...ids],
-    });
+    const nextIds = [...ids];
+    setOptimisticActiveIds(nextIds);
+    setActive.mutate(
+      {
+        conversationId,
+        storeId: domainData?.storeId,
+        domainIds: nextIds,
+      },
+      {
+        onSuccess: (data) => setOptimisticActiveIds(data?.activeDomainIds ?? nextIds),
+        onError: () => setOptimisticActiveIds(null),
+      },
+    );
   };
 
   const spinner = <Spinner className="my-2 size-4" />;
