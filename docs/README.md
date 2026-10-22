@@ -12,8 +12,9 @@
 6. [injection.md](./injection.md) — stable/dynamic 上下文注入
 7. [vfs.md](./vfs.md) — `/memory` 虚拟文件系统
 8. [images.md](./images.md) — 图片归一化、去重、嵌入与召回
-9. [config.md](./config.md) — 配置项
-10. [testing.md](./testing.md) — 测试与真实链路验证
+9. [services.md](./services.md) — embedding / rerank 服务 API 要求
+10. [config.md](./config.md) — 配置项
+11. [testing.md](./testing.md) — 测试与真实链路验证
 
 ## 总体数据流
 

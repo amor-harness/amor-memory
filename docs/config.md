@@ -23,6 +23,9 @@
 | `MEMORY_EMBED_URL` | embedding 服务地址 |
 | `MEMORY_EMBED_DIM` | 向量维度 |
 | `MEMORY_EMBED_MODEL` | 模型名 |
+| `MEMORY_EMBED_TOKEN` | 可选 Bearer token |
+| `MEMORY_EMBED_PROXY` | 可选 HTTP 代理 |
+| `MEMORY_EMBED_TIMEOUT_MS` | 文本嵌入超时 |
 
 ### postgres
 
@@ -64,6 +67,9 @@
 | `MEMORY_RERANK_TOP_MIN_SCORE` | 组内最高分下限 |
 | `MEMORY_RERANK_QUERY_MAX_CHARS` | query 截断 |
 | `MEMORY_RERANK_TEXT_MAX_CHARS` | 候选文本截断 |
+| `MEMORY_RERANK_TOKEN` | 可选 Bearer token |
+| `MEMORY_RERANK_PROXY` | 可选 HTTP 代理 |
+| `MEMORY_RERANK_TIMEOUT` | 重排超时（毫秒） |
 
 ### decay / MMR
 

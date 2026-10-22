@@ -73,6 +73,7 @@ plugin/memory/
 - 抽取、召回、注入算法
 - VFS 与图片记忆
 - 配置与测试
+- embedding / rerank 服务 API 要求
 
 ## License
 

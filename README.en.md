@@ -73,6 +73,7 @@ See [docs/README.md](./docs/README.md) for the full design:
 - Extraction, recall, and injection algorithms
 - VFS and image memory
 - Configuration and testing
+- Embedding and rerank service API requirements
 
 ## License
 
