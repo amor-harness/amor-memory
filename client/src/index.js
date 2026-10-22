@@ -20,6 +20,11 @@ export default function activate(api) {
   if (i18n == null) {
     throw new Error('memory plugin requires the i18n service');
   }
+  for (const name of ['GenericGrantAccessDialog', 'useAuthContext', 'useHasAccess', 'useToastContext']) {
+    if (appUi?.[name] == null) {
+      throw new Error(`memory plugin requires app-ui.${name}`);
+    }
+  }
   const translator = i18n.scope('memory', memoryCatalogs);
   configure(api, ui, translator, appUi);
   const t = translator.t;

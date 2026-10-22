@@ -176,20 +176,74 @@ export function useTranslation() {
   };
 }
 
-let invalidateAll = () => {};
-export function setInvalidateAll(fn) {
-  invalidateAll = fn;
-}
 export function useQueryClient() {
-  return { invalidateQueries: () => invalidateAll() };
-}
-
-export function useHasAccess() {
-  return true;
+  return state.appUi?.useQueryClient?.() ?? { invalidateQueries: () => {} };
 }
 
 export function useAuthContext() {
-  return { user: { id: 'plugin', role: 'USER' } };
+  return state.appUi?.useAuthContext?.() ?? { user: { id: 'plugin', role: 'USER' } };
+}
+
+export function useHasAccess(options) {
+  const check = state.appUi?.useHasAccess;
+  return typeof check === 'function' ? check(options) === true : true;
+}
+
+export function useQuery(options) {
+  const host = state.appUi?.useQuery;
+  if (typeof host === 'function') {
+    return host(options);
+  }
+  const [result, setResult] = state.React.useState({
+    data: undefined,
+    isLoading: options.enabled !== false,
+    isError: false,
+    error: null,
+    refetch: () => {},
+  });
+  const key = JSON.stringify(options.queryKey ?? []);
+  state.React.useEffect(() => {
+    if (options.enabled === false) {
+      setResult((current) => ({ ...current, isLoading: false }));
+      return undefined;
+    }
+    let cancelled = false;
+    setResult((current) => ({ ...current, isLoading: true }));
+    Promise.resolve()
+      .then(() => options.queryFn())
+      .then((data) => {
+        if (!cancelled) setResult({ data, isLoading: false, isError: false, error: null, refetch: () => {} });
+      })
+      .catch((error) => {
+        if (!cancelled) setResult({ data: undefined, isLoading: false, isError: true, error, refetch: () => {} });
+      });
+    return () => { cancelled = true; };
+  }, [key, options.enabled]);
+  return result;
+}
+
+export function useMutation(options) {
+  const host = state.appUi?.useMutation;
+  if (typeof host === 'function') {
+    return host(options);
+  }
+  const [isPending, setPending] = state.React.useState(false);
+  const mutate = (vars, local = {}) => {
+    setPending(true);
+    Promise.resolve()
+      .then(() => options.mutationFn(vars))
+      .then((data) => {
+        setPending(false);
+        options.onSuccess?.(data);
+        local.onSuccess?.(data);
+      })
+      .catch((error) => {
+        setPending(false);
+        options.onError?.(error);
+        local.onError?.(error);
+      });
+  };
+  return { mutate, isPending };
 }
 
 

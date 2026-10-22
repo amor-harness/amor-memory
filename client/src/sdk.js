@@ -1,17 +1,15 @@
-/** Minimal stand-ins for the data-provider value imports the panel reads.
- *  Permission enums only travel into `useHasAccess`, which the plugin resolves
- *  from the RPC result, so their values are never branched on here. */
-const passthrough = new Proxy(
-  {},
-  {
-    get: (_target, key) => String(key),
-  },
-);
-
-export const Permissions = passthrough;
-export const PermissionTypes = passthrough;
+export const Permissions = {
+  USE: 'USE',
+  CREATE: 'CREATE',
+  READ: 'READ',
+  UPDATE: 'UPDATE',
+  OPT_OUT: 'OPT_OUT',
+  SHARE: 'SHARE',
+  SHARE_PUBLIC: 'SHARE_PUBLIC',
+};
+export const PermissionTypes = { MEMORIES: 'MEMORIES' };
 export const ResourceType = { MEMORYSTORE: 'memoryStore' };
-export const QueryKeys = passthrough;
-export const SystemRoles = passthrough;
+export const QueryKeys = { memoryStores: 'memoryStores' };
+export const SystemRoles = { ADMIN: 'ADMIN', USER: 'USER' };
 
 export const MEMORY_DOMAIN_KINDS = ['real', 'fictional', 'project', 'sandbox', 'study', 'work'];

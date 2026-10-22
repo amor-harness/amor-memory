@@ -1,85 +1,46 @@
-/** RPC-backed stand-ins for the app's React Query hooks, shaped so the ported
- *  panel code can stay close to the original. */
-import { currentApi, setInvalidateAll, useEffect, useState } from './runtime.js';
-
-let revision = 0;
-const listeners = new Set();
-
-export function bump() {
-  revision += 1;
-  for (const listener of listeners) {
-    listener();
-  }
-}
-
-setInvalidateAll(bump);
-
-function subscribe(listener) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-function useRevision() {
-  const [value, setValue] = useState(revision);
-  useEffect(() => subscribe(() => setValue(revision)), []);
-  return value;
-}
+/** RPC-backed hooks built on the app's React Query instance. */
+import {
+  currentApi,
+  useMutation as useHostMutation,
+  useQuery as useHostQuery,
+  useQueryClient,
+} from './runtime.js';
 
 export function useRpc(method, params, enabled = true) {
-  const api = currentApi();
-  const version = useRevision();
-  const [state, setState] = useState({ data: undefined, isLoading: enabled, isError: false, error: null });
-  const paramsKey = JSON.stringify(params ?? {});
-
-  useEffect(() => {
-    if (!enabled) {
-      setState({ data: undefined, isLoading: false, isError: false, error: null });
-      return undefined;
-    }
-    let cancelled = false;
-    setState((current) => ({ ...current, isLoading: true }));
-    api
-      .call(method, params ?? {})
-      .then((data) => {
-        if (!cancelled) {
-          setState({ data, isLoading: false, isError: false, error: null });
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setState({ data: undefined, isLoading: false, isError: true, error });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [method, paramsKey, enabled, version]);
-
-  return state;
+  const result = useHostQuery({
+    queryKey: [method, params ?? {}],
+    queryFn: () => currentApi().call(method, params ?? {}),
+    enabled,
+  });
+  return {
+    data: result.data,
+    isLoading: result.isLoading,
+    isError: result.isError,
+    error: result.error,
+    refetch: result.refetch,
+  };
 }
 
 function useMutation(method, options = {}) {
-  const api = currentApi();
-  const [isLoading, setLoading] = useState(false);
-  const mutate = (vars, local = {}) => {
-    setLoading(true);
-    api
-      .call(method, vars ?? {})
-      .then((data) => {
-        setLoading(false);
-        if (options.invalidate !== false) {
-          bump();
-        }
-        options.onSuccess?.(data);
-        local.onSuccess?.(data);
-      })
-      .catch((error) => {
-        setLoading(false);
-        options.onError?.(error);
-        local.onError?.(error);
-      });
+  const queryClient = useQueryClient();
+  const result = useHostMutation({
+    mutationFn: (vars) => currentApi().call(method, vars ?? {}),
+    onSuccess: (data) => {
+      if (options.invalidate !== false) {
+        queryClient.invalidateQueries();
+      }
+      options.onSuccess?.(data);
+    },
+    onError: (error) => options.onError?.(error),
+  });
+  return {
+    mutate: (vars, local = {}) =>
+      result.mutate(vars, {
+        onSuccess: local.onSuccess,
+        onError: local.onError,
+      }),
+    isLoading: result.isPending,
   };
-  return { mutate, isLoading };
 }
 
 export function useMemoriesQuery(storeId, options = {}) {
@@ -90,7 +51,7 @@ export function useMemoriesQuery(storeId, options = {}) {
     isLoading: result.isLoading,
     isError: result.isError,
     error: result.error,
-    refetch: () => bump(),
+    refetch: result.refetch,
   };
 }
 
@@ -167,23 +128,9 @@ export const useRestoreMemoryVersionMutation = (options) =>
   useMutation('memories.versions.restore', options);
 
 export function useUpdateMemoryPermissionsMutation(options = {}) {
-  const api = currentApi();
-  const [state, setState] = useState({ isLoading: false, isSuccess: false });
-  const mutate = (vars) => {
-    setState({ isLoading: true, isSuccess: false });
-    api
-      .call('memories.permissions.set', {
-        roleName: vars.roleName,
-        updates: vars.updates,
-      })
-      .then(() => {
-        setState({ isLoading: false, isSuccess: true });
-        options.onSuccess?.();
-      })
-      .catch((error) => {
-        setState({ isLoading: false, isSuccess: false });
-        options.onError?.(error);
-      });
-  };
-  return { ...state, mutate };
+  const result = useMutation('memories.permissions.set', {
+    ...options,
+    onSuccess: (data) => options.onSuccess?.(data),
+  });
+  return { ...result, isSuccess: false };
 }

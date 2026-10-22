@@ -342,19 +342,70 @@ function useTranslation() {
     } }
   };
 }
-var invalidateAll = () => {
-};
-function setInvalidateAll(fn) {
-  invalidateAll = fn;
-}
 function useQueryClient() {
-  return { invalidateQueries: () => invalidateAll() };
-}
-function useHasAccess() {
-  return true;
+  return state.appUi?.useQueryClient?.() ?? { invalidateQueries: () => {
+  } };
 }
 function useAuthContext() {
-  return { user: { id: "plugin", role: "USER" } };
+  return state.appUi?.useAuthContext?.() ?? { user: { id: "plugin", role: "USER" } };
+}
+function useHasAccess(options) {
+  const check = state.appUi?.useHasAccess;
+  return typeof check === "function" ? check(options) === true : true;
+}
+function useQuery(options) {
+  const host = state.appUi?.useQuery;
+  if (typeof host === "function") {
+    return host(options);
+  }
+  const [result, setResult] = state.React.useState({
+    data: void 0,
+    isLoading: options.enabled !== false,
+    isError: false,
+    error: null,
+    refetch: () => {
+    }
+  });
+  const key = JSON.stringify(options.queryKey ?? []);
+  state.React.useEffect(() => {
+    if (options.enabled === false) {
+      setResult((current) => ({ ...current, isLoading: false }));
+      return void 0;
+    }
+    let cancelled = false;
+    setResult((current) => ({ ...current, isLoading: true }));
+    Promise.resolve().then(() => options.queryFn()).then((data) => {
+      if (!cancelled) setResult({ data, isLoading: false, isError: false, error: null, refetch: () => {
+      } });
+    }).catch((error) => {
+      if (!cancelled) setResult({ data: void 0, isLoading: false, isError: true, error, refetch: () => {
+      } });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [key, options.enabled]);
+  return result;
+}
+function useMutation(options) {
+  const host = state.appUi?.useMutation;
+  if (typeof host === "function") {
+    return host(options);
+  }
+  const [isPending, setPending] = state.React.useState(false);
+  const mutate = (vars, local = {}) => {
+    setPending(true);
+    Promise.resolve().then(() => options.mutationFn(vars)).then((data) => {
+      setPending(false);
+      options.onSuccess?.(data);
+      local.onSuccess?.(data);
+    }).catch((error) => {
+      setPending(false);
+      options.onError?.(error);
+      local.onError?.(error);
+    });
+  };
+  return { mutate, isPending };
 }
 
 // client/src/datetime.js
@@ -454,83 +505,54 @@ function getMemoryApiErrorMessage(error, fallback) {
 }
 
 // client/src/sdk.js
-var passthrough = new Proxy(
-  {},
-  {
-    get: (_target, key) => String(key)
-  }
-);
-var Permissions = passthrough;
-var PermissionTypes = passthrough;
+var Permissions = {
+  USE: "USE",
+  CREATE: "CREATE",
+  READ: "READ",
+  UPDATE: "UPDATE",
+  OPT_OUT: "OPT_OUT",
+  SHARE: "SHARE",
+  SHARE_PUBLIC: "SHARE_PUBLIC"
+};
+var PermissionTypes = { MEMORIES: "MEMORIES" };
 var ResourceType = { MEMORYSTORE: "memoryStore" };
-var QueryKeys = passthrough;
+var QueryKeys = { memoryStores: "memoryStores" };
 var MEMORY_DOMAIN_KINDS = ["real", "fictional", "project", "sandbox", "study", "work"];
 
 // client/src/data.js
-var revision = 0;
-var listeners = /* @__PURE__ */ new Set();
-function bump() {
-  revision += 1;
-  for (const listener of listeners) {
-    listener();
-  }
-}
-setInvalidateAll(bump);
-function subscribe(listener) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-function useRevision() {
-  const [value, setValue] = useState(revision);
-  useEffect(() => subscribe(() => setValue(revision)), []);
-  return value;
-}
 function useRpc(method, params, enabled = true) {
-  const api = currentApi();
-  const version = useRevision();
-  const [state2, setState] = useState({ data: void 0, isLoading: enabled, isError: false, error: null });
-  const paramsKey = JSON.stringify(params ?? {});
-  useEffect(() => {
-    if (!enabled) {
-      setState({ data: void 0, isLoading: false, isError: false, error: null });
-      return void 0;
-    }
-    let cancelled = false;
-    setState((current) => ({ ...current, isLoading: true }));
-    api.call(method, params ?? {}).then((data) => {
-      if (!cancelled) {
-        setState({ data, isLoading: false, isError: false, error: null });
-      }
-    }).catch((error) => {
-      if (!cancelled) {
-        setState({ data: void 0, isLoading: false, isError: true, error });
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [method, paramsKey, enabled, version]);
-  return state2;
+  const result = useQuery({
+    queryKey: [method, params ?? {}],
+    queryFn: () => currentApi().call(method, params ?? {}),
+    enabled
+  });
+  return {
+    data: result.data,
+    isLoading: result.isLoading,
+    isError: result.isError,
+    error: result.error,
+    refetch: result.refetch
+  };
 }
-function useMutation(method, options = {}) {
-  const api = currentApi();
-  const [isLoading, setLoading] = useState(false);
-  const mutate = (vars, local = {}) => {
-    setLoading(true);
-    api.call(method, vars ?? {}).then((data) => {
-      setLoading(false);
+function useMutation2(method, options = {}) {
+  const queryClient = useQueryClient();
+  const result = useMutation({
+    mutationFn: (vars) => currentApi().call(method, vars ?? {}),
+    onSuccess: (data) => {
       if (options.invalidate !== false) {
-        bump();
+        queryClient.invalidateQueries();
       }
       options.onSuccess?.(data);
-      local.onSuccess?.(data);
-    }).catch((error) => {
-      setLoading(false);
-      options.onError?.(error);
-      local.onError?.(error);
-    });
+    },
+    onError: (error) => options.onError?.(error)
+  });
+  return {
+    mutate: (vars, local = {}) => result.mutate(vars, {
+      onSuccess: local.onSuccess,
+      onError: local.onError
+    }),
+    isLoading: result.isPending
   };
-  return { mutate, isLoading };
 }
 function useMemoriesQuery(storeId, options = {}) {
   const params = storeId ? { storeId } : {};
@@ -540,7 +562,7 @@ function useMemoriesQuery(storeId, options = {}) {
     isLoading: result.isLoading,
     isError: result.isError,
     error: result.error,
-    refetch: () => bump()
+    refetch: result.refetch
   };
 }
 function useMemoryStoresQuery() {
@@ -572,7 +594,7 @@ function useConversationMemoriesQuery(conversationId, storeId, options = {}) {
   return { data: result.data, isLoading: result.isLoading, isError: result.isError };
 }
 function useSetMemoryDomainActiveMutation(options) {
-  return useMutation("memories.domains.setActive", options);
+  return useMutation2("memories.domains.setActive", options);
 }
 function useMemoryVersionsQuery(key, storeId, options = {}) {
   const result = useRpc(
@@ -592,36 +614,25 @@ function useVFSImageSrcQuery(value, options = {}) {
   );
   return { data: result.data?.dataUrl, isLoading: result.isLoading };
 }
-var useCreateMemoryMutation = (options) => useMutation("memories.create", options);
-var useUpdateMemoryMutation = (options) => useMutation("memories.update", options);
-var useDeleteMemoryMutation = (options) => useMutation("memories.delete", options);
-var useDeleteMemoryImageMutation = (options) => useMutation("memories.images.delete", options);
-var useCreateMemoryStoreMutation = (options) => useMutation("memories.stores.create", options);
-var useUpdateMemoryStoreMutation = (options) => useMutation("memories.stores.rename", options);
-var useDeleteMemoryStoreMutation = (options) => useMutation("memories.stores.delete", options);
-var useClearMemoryStoreMutation = (options) => useMutation("memories.stores.clear", options);
-var useCreateMemoryDomainMutation = (options) => useMutation("memories.domains.create", options);
-var useUpdateMemoryDomainMutation = (options) => useMutation("memories.domains.update", options);
-var useDeleteMemoryDomainMutation = (options) => useMutation("memories.domains.delete", options);
-var useUpdateMemoryPreferencesMutation = (options) => useMutation("memories.preferences.set", options);
-var useRestoreMemoryVersionMutation = (options) => useMutation("memories.versions.restore", options);
+var useCreateMemoryMutation = (options) => useMutation2("memories.create", options);
+var useUpdateMemoryMutation = (options) => useMutation2("memories.update", options);
+var useDeleteMemoryMutation = (options) => useMutation2("memories.delete", options);
+var useDeleteMemoryImageMutation = (options) => useMutation2("memories.images.delete", options);
+var useCreateMemoryStoreMutation = (options) => useMutation2("memories.stores.create", options);
+var useUpdateMemoryStoreMutation = (options) => useMutation2("memories.stores.rename", options);
+var useDeleteMemoryStoreMutation = (options) => useMutation2("memories.stores.delete", options);
+var useClearMemoryStoreMutation = (options) => useMutation2("memories.stores.clear", options);
+var useCreateMemoryDomainMutation = (options) => useMutation2("memories.domains.create", options);
+var useUpdateMemoryDomainMutation = (options) => useMutation2("memories.domains.update", options);
+var useDeleteMemoryDomainMutation = (options) => useMutation2("memories.domains.delete", options);
+var useUpdateMemoryPreferencesMutation = (options) => useMutation2("memories.preferences.set", options);
+var useRestoreMemoryVersionMutation = (options) => useMutation2("memories.versions.restore", options);
 function useUpdateMemoryPermissionsMutation(options = {}) {
-  const api = currentApi();
-  const [state2, setState] = useState({ isLoading: false, isSuccess: false });
-  const mutate = (vars) => {
-    setState({ isLoading: true, isSuccess: false });
-    api.call("memories.permissions.set", {
-      roleName: vars.roleName,
-      updates: vars.updates
-    }).then(() => {
-      setState({ isLoading: false, isSuccess: true });
-      options.onSuccess?.();
-    }).catch((error) => {
-      setState({ isLoading: false, isSuccess: false });
-      options.onError?.(error);
-    });
-  };
-  return { ...state2, mutate };
+  const result = useMutation2("memories.permissions.set", {
+    ...options,
+    onSuccess: (data) => options.onSuccess?.(data)
+  });
+  return { ...result, isSuccess: false };
 }
 
 // client/src/components/MemoryDomainDeleteDialog.tsx
@@ -3287,6 +3298,11 @@ function activate(api) {
   }
   if (i18n == null) {
     throw new Error("memory plugin requires the i18n service");
+  }
+  for (const name of ["GenericGrantAccessDialog", "useAuthContext", "useHasAccess", "useToastContext"]) {
+    if (appUi?.[name] == null) {
+      throw new Error(`memory plugin requires app-ui.${name}`);
+    }
   }
   const translator = i18n.scope("memory", memoryCatalogs);
   configure(api, ui, translator, appUi);
