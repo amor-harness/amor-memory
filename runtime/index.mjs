@@ -1,4 +1,4 @@
-import { configureDatabase } from './db.mjs';
+import { configureDatabase, models } from './db.mjs';
 import { ensureMemorySchema } from './recall/schema.mjs';
 import { configurePool } from './recall/vectorStore.mjs';
 import { backendInfo } from './backend/info.mjs';
@@ -25,6 +25,35 @@ import { runExtraction } from './extraction/processor.mjs';
 import { registerMemoryVectorSync } from './extraction/vector-sync.mjs';
 import * as extraction from './extraction/index.mjs';
 import { createDomain, deleteDomain, setActiveDomains, updateDomain } from './backend/domain-write.mjs';
+
+
+async function attachmentsFromWrites({ userId, storeId, conversationId, messageId, since }) {
+  const db = await models();
+  const versions = await db.MemoryVersion.find({
+    storeId: String(storeId),
+    createdAt: { $gte: since },
+  })
+    .sort({ createdAt: 1 })
+    .lean();
+  const latest = new Map();
+  for (const version of versions) {
+    latest.set(version.key, version);
+  }
+  return [...latest.values()].map((version) => ({
+    type: 'memory',
+    messageId,
+    conversationId,
+    memory: {
+      key: version.key,
+      value: version.value,
+      ...(Array.isArray(version.tags) && version.tags.length > 0 ? { tags: version.tags } : {}),
+      tokenCount: version.tokenCount ?? 0,
+      type: 'update',
+      storeId: String(storeId),
+      ...(version.domainId ? { domainId: version.domainId } : {}),
+    },
+  }));
+}
 
 function flatten(value, out) {
   for (const [key, entry] of Object.entries(value ?? {})) {
@@ -679,6 +708,7 @@ export default {
           extraction.scheduleMemoryExtraction(key, {
             id: payload.messageId,
             run: async (signal) => {
+              const startedAt = new Date();
               const result = await runExtraction({
                 userId: payload.userId,
                 storeId: payload.storeId,
@@ -697,13 +727,25 @@ export default {
                 now: payload.now,
                 signal,
               });
-              if (Array.isArray(result.attachments) && result.attachments.length > 0) {
+              let attachments = Array.isArray(result?.attachments)
+                ? result.attachments.filter((entry) => entry != null)
+                : [];
+              if (attachments.length === 0) {
+                attachments = await attachmentsFromWrites({
+                  userId: payload.userId,
+                  storeId: payload.storeId,
+                  conversationId: payload.conversationId,
+                  messageId: payload.messageId,
+                  since: startedAt,
+                }).catch(() => []);
+              }
+              if (attachments.length > 0) {
                 await kernel
                   .call('memory.extraction.attachments', {
                     userId: payload.userId,
                     conversationId: payload.conversationId,
                     messageId: payload.messageId,
-                    attachments: result.attachments,
+                    attachments,
                   })
                   .catch((error) =>
                     console.error('[memory-plugin] artifact bridge failed:', error),
@@ -757,3 +799,5 @@ export default {
     );
   },
 };
+
+export { attachmentsFromWrites };
