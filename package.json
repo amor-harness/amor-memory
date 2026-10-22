@@ -50,5 +50,10 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
+  },
+  "author": {
+    "name": "Amor",
+    "email": "amor@gilatod.art",
+    "url": "https://github.com/amor-harness"
   }
 }

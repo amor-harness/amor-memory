@@ -2,7 +2,24 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "memory",
   "version": "0.1.0",
-  "description": "记忆系统插件：记忆库、领域、召回、抽取、VFS 与图片记忆。",
+  "description": "Amor 记忆系统插件：记忆库、领域、抽取、混合召回、提示注入、VFS 与图片记忆。",
+  "author": {
+    "name": "Amor",
+    "email": "amor@gilatod.art",
+    "url": "https://github.com/amor-harness"
+  },
+  "homepage": "https://github.com/amor-harness/amor-memory",
+  "repository": "https://github.com/amor-harness/amor-memory",
+  "license": "MIT",
+  "keywords": [
+    "amor",
+    "memory",
+    "agent",
+    "rag",
+    "vfs",
+    "pgvector",
+    "cordis"
+  ],
   "client": {
     "entry": "./client/dist/index.mjs"
   },
