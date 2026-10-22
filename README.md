@@ -1,5 +1,7 @@
 # @amor-harness/memory
 
+**中文** · [English](./README.en.md)
+
 Amor 的记忆系统插件。
 
 它把长期记忆拆成 **store → domain → entry** 三层，提供自动抽取、混合召回、prompt 注入、`/memory` 虚拟文件系统和图片记忆。

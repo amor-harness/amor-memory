@@ -37,7 +37,8 @@
     "runtime/extraction/",
     "runtime/domain/",
     "runtime/vfs/",
-    "client/dist/index.mjs"
+    "client/dist/index.mjs",
+    "README.en.md"
   ],
   "scripts": {
     "build": "esbuild client/src/index.js --bundle --format=esm --outfile=client/dist/index.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning",
