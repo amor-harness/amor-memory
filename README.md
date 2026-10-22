@@ -26,13 +26,12 @@ Amor 的记忆系统插件。
 
 ## 配置
 
-复制 `config.example.json` 为 `config.json`，按部署环境填写 embedding、pgvector、rerank 地址。
+复制 `config.example.json` 为 `config.json`，按部署环境填写 embedding 与 rerank 服务地址。
 
 主要配置组：
 
 ```text
 embedding   embedding 服务与维度
-postgres    pgvector 连接
 rerank      cross-encoder
 recall      候选数、注入条数、相似度门槛
 tags        标签召回参数
@@ -44,7 +43,7 @@ limits      token/字符上限
 
 ## 安装
 
-这是一个 cordis 插件包，不是一个独立服务。它依赖 `database` 插件提供共享 MongoDB/PostgreSQL 连接，并在启动时自动确保 pgvector 表存在。
+这是一个 cordis 插件包，不是一个独立服务。它依赖 `database` 插件提供 MongoDB 与 PostgreSQL/pgvector 连接，并在首次启动时自动创建所需的向量表。
 
 ```text
 plugin/database/

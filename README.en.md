@@ -26,13 +26,12 @@ It organizes long-term memory as **store → domain → entry**, and provides au
 
 ## Configuration
 
-Copy `config.example.json` to `config.json` and fill in the embedding, pgvector, and rerank endpoints for your deployment.
+Copy `config.example.json` to `config.json` and fill in the embedding and rerank endpoints for your deployment.
 
 Main configuration groups:
 
 ```text
 embedding   embedding service and dimensions
-postgres    pgvector connection
 rerank      cross-encoder
 recall      candidate count, injection count, similarity thresholds
 tags        tag-recall parameters
@@ -44,7 +43,7 @@ limits      token/character limits
 
 ## Installation
 
-This is a cordis plugin package, not a standalone service. It depends on the `database` plugin for shared MongoDB/PostgreSQL connections and creates the pgvector tables it needs on startup.
+This is a cordis plugin package, not a standalone service. It depends on the `database` plugin for MongoDB and PostgreSQL/pgvector connectivity, and creates the vector tables it needs on first startup.
 
 ```text
 plugin/database/

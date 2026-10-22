@@ -1,25 +1,13 @@
-import { Pool } from 'pg';
 import { memoryEnv } from './config.mjs';
 import { embeddingsEnabled, embedText } from './embed.mjs';
-
-let pool = null;
+import { getPool as getSharedPool, isEnabled as vectorStoreEnabled } from '../recall/vectorStore.mjs';
 
 function getPool() {
-  if (pool == null) {
-    pool = new Pool({
-      host: memoryEnv('MEMORY_PG_HOST') || 'vectordb',
-      port: Number(memoryEnv('MEMORY_PG_PORT') || 5432),
-      database: memoryEnv('MEMORY_PG_DB') || '',
-      user: memoryEnv('MEMORY_PG_USER') || '',
-      password: memoryEnv('MEMORY_PG_PASSWORD') || '',
-      max: 3,
-    });
-  }
-  return pool;
+  return getSharedPool();
 }
 
 export function vectorsEnabled() {
-  return Boolean(memoryEnv('MEMORY_PG_HOST')) && embeddingsEnabled();
+  return vectorStoreEnabled() && embeddingsEnabled();
 }
 
 function literal(vector) {

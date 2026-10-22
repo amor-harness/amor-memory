@@ -152,53 +152,20 @@ Authorization: Bearer <MEMORY_RERANK_TOKEN>   # 可选
 | `MEMORY_RERANK_URL` | 服务根地址，不含 `/v1` |
 | `MEMORY_RERANK_MODEL` | 默认 `jina-reranker-v3.5` |
 
-## 3. pgvector 表要求
+## 3. PostgreSQL / pgvector
 
-memory 启动时会自动创建扩展和表：
+向量召回需要 PostgreSQL 与 pgvector 扩展。连接由 `database` 插件提供，memory 不需要额外的数据库连接配置。
 
-- `CREATE EXTENSION IF NOT EXISTS vector`；
-- `memory_vectors`；
-- `image_vectors`。
+memory 首次启动时会自动创建向量表；已有表不会被覆盖。
 
-如果表已经存在，`CREATE TABLE IF NOT EXISTS` 不会覆盖；列维度必须与当前 embedding 模型一致。
-
-```sql
-CREATE TABLE memory_vectors (
-  "userId" text NOT NULL,
-  "storeId" text NOT NULL DEFAULT '',
-  key text NOT NULL,
-  section text NOT NULL DEFAULT '',
-  embedding vector(1024) NOT NULL,
-  value text NOT NULL,
-  tags text[] NOT NULL DEFAULT '{}',
-  "domainId" text NOT NULL DEFAULT '',
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY ("userId", "storeId", key, section)
-);
-
-CREATE TABLE image_vectors (
-  "userId" text NOT NULL,
-  "storeId" text NOT NULL DEFAULT '',
-  sha256 text NOT NULL,
-  embedding vector(1024) NOT NULL,
-  "domainId" text NOT NULL DEFAULT '',
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY ("userId", "storeId", sha256)
-);
-```
-
-`vector(N)` 的 N 必须等于 embedding 模型输出维度。当前配置：
+向量维度必须与 embedding 模型一致：
 
 ```text
-MEMORY_EMBED_DIM=1024
-MEMORY_IMAGE_DIM=1024
+MEMORY_EMBED_DIM
+MEMORY_IMAGE_DIM
 ```
 
-换模型时：
-
-1. 先迁移/重建向量表到新维度；
-2. 重新生成已有记忆和图片向量；
-3. 再切换 `MEMORY_EMBED_MODEL`。
+更换 embedding 模型时，需要重建向量表并重新生成已有记忆和图片的向量。
 
 ## 4. 健康检查
 

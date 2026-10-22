@@ -13,7 +13,9 @@ before(async () => {
   const methods = await extractionMethods();
   const memory = await import('../extraction/index.mjs');
   const userId = new mongoose.Types.ObjectId();
-  await mongoose.models.MemoryEntry.create({
+  const { models } = await import('../db.mjs');
+  const db = await models();
+  await db.MemoryEntry.create({
     userId,
     storeId: 'store-1',
     key: 'seed',

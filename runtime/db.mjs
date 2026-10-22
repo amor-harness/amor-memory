@@ -126,10 +126,12 @@ conversationMemorySchema.index({ userId: 1, conversationId: 1, key: 1 }, { uniqu
 let connection = null;
 let connecting = null;
 let sharedConnection = null;
+let appConnection = null;
 
 /** Reuse a connection owned by the database plugin. */
-export function configureDatabase(db) {
+export function configureDatabase(db, appDb = null) {
   sharedConnection = db ?? null;
+  appConnection = appDb ?? null;
 }
 
 function registerModels(conn) {
@@ -174,6 +176,13 @@ export async function connectDb() {
       });
   }
   return connecting;
+}
+
+export async function connectAppDb() {
+  if (appConnection != null) {
+    return appConnection;
+  }
+  return connectDb();
 }
 
 export async function models() {

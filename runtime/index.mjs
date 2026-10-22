@@ -1,3 +1,6 @@
+import { configureDatabase } from './db.mjs';
+import { ensureMemorySchema } from './recall/schema.mjs';
+import { configurePool } from './recall/vectorStore.mjs';
 import { backendInfo } from './backend/info.mjs';
 import { listOwnedMemories, listOwnedStores, ownedStore } from './backend/memories.mjs';
 import { listDomains } from './backend/domains.mjs';
@@ -41,25 +44,37 @@ export default {
     const access = ctx.access;
     const values = flatten(config, {});
     setConfig(values);
-    try {
-      if (ctx.database?.mongo != null) {
-        configureDatabase(ctx.database.mongo);
+    const ensureActiveDatabase = async () => {
+      try {
+        const database = ctx.database;
+        if (database == null) {
+          return null;
+        }
+        const pool = await database.postgres();
+        if (pool != null) {
+          configurePool(pool);
+          await ensureMemorySchema(pool);
+        }
+        const mongo = await database.mongo().catch(() => null);
+        const appMongo = await database.appMongo().catch(() => null);
+        if (mongo != null) {
+          configureDatabase(mongo, appMongo);
+        }
+        return pool;
+      } catch (error) {
+        console.error('[memory] database setup failed:', error?.message ?? error);
+        return null;
       }
-      const pgConfig = {
-        host: values.MEMORY_PG_HOST || '',
-        port: Number(values.MEMORY_PG_PORT || 5432),
-        database: values.MEMORY_PG_DB || '',
-        user: values.MEMORY_PG_USER || '',
-        password: values.MEMORY_PG_PASSWORD || '',
-      };
-      if (ctx.database?.postgres != null && pgConfig.host !== '') {
-        const pool = await ctx.database.postgres(pgConfig);
-        configurePool(pool);
-        await ensureMemorySchema(pool);
+    };
+    void (async () => {
+      for (let i = 0; i < 100; i += 1) {
+        if ((await ensureActiveDatabase()) != null) {
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
-    } catch (error) {
-      console.error('[memory] database setup failed:', error?.message ?? error);
-    }
+    })();
+
     registerMemoryVectorSync();
     registerDomainTools(ctx.tools);
     await kernel.call('memory.config.apply', { values });
@@ -648,14 +663,15 @@ export default {
         collectDiagnostics: params?.collectDiagnostics === true,
       }),
     );
-    ctx.kernel.expose('memories.recall.local', async (params, meta) =>
-      recallVectorStage({
+    ctx.kernel.expose('memories.recall.local', async (params, meta) => {
+      await ensureActiveDatabase();
+      return recallVectorStage({
         userId: meta?.userId,
         storeId: params?.storeId,
         domainIds: params?.domainIds,
         query: params?.query,
-      }),
-    );
+      });
+    });
     ctx.kernel.expose('memories.stores', async (_params, meta) =>
       listStores({ userId: meta?.userId, role: meta?.role }),
     );

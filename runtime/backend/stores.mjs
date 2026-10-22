@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
-import { connectDb, models } from '../db.mjs';
+import { connectAppDb, models } from '../db.mjs';
 import { requirePermission } from './memories.mjs';
-import { deleteVectorsForStore } from './vectors.mjs';
+import { deleteVectorsForStore, vectorsEnabled } from './vectors.mjs';
 import imageStore from '../recall/imageStore.mjs';
-import { memoryEnv } from './config.mjs';
 
 const OWNER_BITS = 15;
 
@@ -113,12 +112,12 @@ export async function deleteStore({ userId, role, storeId }) {
   }
   await purgeStore({ db, userId: user, store });
   await db.MemoryStore.deleteOne({ _id: store._id });
-  const conn = await connectDb();
+  const conn = await connectAppDb();
   await conn.collection('aclentries').deleteMany({
     resourceType: 'memoryStore',
     resourceId: store._id,
   });
-  if (memoryEnv('MEMORY_PG_HOST')) {
+  if (vectorsEnabled()) {
     await Promise.all([
       deleteVectorsForStore({ userId, storeId: String(store._id) }).catch((error) =>
         console.error('[memory-plugin] vector store cleanup failed:', error.message),
@@ -140,7 +139,7 @@ export async function clearStore({ userId, role, storeId }) {
     return { ok: false, status: 404, error: 'Memory store not found.' };
   }
   const { entries } = await purgeStore({ db, userId: user, store });
-  if (memoryEnv('MEMORY_PG_HOST')) {
+  if (vectorsEnabled()) {
     await Promise.all([
       deleteVectorsForStore({ userId, storeId: String(store._id) }).catch((error) =>
         console.error('[memory-plugin] vector store cleanup failed:', error.message),
@@ -159,7 +158,7 @@ const EDIT_BITS = 2;
 /** The user's stores plus the ones shared with them, shaped for the panel. */
 export async function listStores({ userId, role }) {
   await requirePermission({ userId, role, permissions: ['USE', 'READ'] });
-  const conn = await connectDb();
+  const conn = await connectAppDb();
   const db = await models();
   const user = new mongoose.Types.ObjectId(String(userId));
   const [owned, userAcl] = await Promise.all([

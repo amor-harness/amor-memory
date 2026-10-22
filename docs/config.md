@@ -27,17 +27,11 @@
 | `MEMORY_EMBED_PROXY` | 可选 HTTP 代理 |
 | `MEMORY_EMBED_TIMEOUT_MS` | 文本嵌入超时 |
 
-### postgres
+### PostgreSQL
 
-memory 启动时会用这些值向 `database` 插件申请共享连接池，并确保 pgvector 表存在。
+向量召回需要 PostgreSQL + pgvector。连接由 `database` 插件提供，memory 不提供 PostgreSQL 连接配置。
 
-| 键 | 作用 |
-|---|---|
-| `MEMORY_PG_HOST` | pgvector 主机 |
-| `MEMORY_PG_PORT` | 端口 |
-| `MEMORY_PG_DB` | 数据库 |
-| `MEMORY_PG_USER` | 用户 |
-| `MEMORY_PG_PASSWORD` | 密码 |
+memory 会自动创建所需的扩展和向量表，不需要手工建表。
 
 ### recall
 

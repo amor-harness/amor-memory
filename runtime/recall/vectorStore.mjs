@@ -1,4 +1,3 @@
-import { Pool } from 'pg';
 import { memoryEnv } from './env.mjs';
 
 let pool = null;
@@ -12,24 +11,14 @@ export function configurePool(next) {
 }
 
 export function isEnabled() {
-  return memoryEnv('MEMORY_PG_HOST') !== undefined && memoryEnv('MEMORY_PG_HOST') !== '';
+  return sharedPool != null;
 }
 
 export function getPool() {
   if (sharedPool != null) {
     return sharedPool;
   }
-  if (pool == null) {
-    pool = new Pool({
-      host: memoryEnv('MEMORY_PG_HOST') || 'vectordb',
-      port: Number(memoryEnv('MEMORY_PG_PORT') || 5432),
-      database: memoryEnv('MEMORY_PG_DB') || '',
-      user: memoryEnv('MEMORY_PG_USER') || '',
-      password: memoryEnv('MEMORY_PG_PASSWORD') || '',
-      max: 4,
-    });
-  }
-  return pool;
+  throw new Error('database plugin Postgres pool is not configured');
 }
 
 export async function ensureSchema() {

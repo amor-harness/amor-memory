@@ -1,8 +1,8 @@
 import { memoryEnv } from './env.mjs';
-import { getPool } from './vectorStore.mjs';
+import { getPool, isEnabled as vectorEnabled } from './vectorStore.mjs';
 
 export function isEnabled() {
-  return memoryEnv('MEMORY_PG_HOST') !== undefined && memoryEnv('MEMORY_PG_HOST') !== '';
+  return vectorEnabled();
 }
 
 function vectorLiteral(vector) {

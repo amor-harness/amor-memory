@@ -3,9 +3,6 @@
     "MEMORY_EMBED_URL": "http://127.0.0.1:8788",
     "MEMORY_EMBED_DIM": "1024"
   },
-  "postgres": {
-    "MEMORY_PG_HOST": "vectordb"
-  },
   "rerank": {
     "MEMORY_RERANK_URL": "http://127.0.0.1:8787",
     "MEMORY_RERANK_RELATIVE_MIN": "0.60",

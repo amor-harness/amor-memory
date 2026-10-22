@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { models, connectDb } from '../db.mjs';
+import { models, connectAppDb } from '../db.mjs';
 
 const PERMISSION_KEYS = ['USE', 'CREATE', 'UPDATE', 'READ', 'OPT_OUT', 'SHARE'];
 
@@ -8,7 +8,7 @@ export async function roleMemoryPermissions({ role }) {
   if (!role) {
     return null;
   }
-  const conn = await connectDb();
+  const conn = await connectAppDb();
   const doc = await conn.collection('roles').findOne({ name: String(role) });
   if (!doc) {
     return null;
@@ -155,7 +155,7 @@ export async function readableStore({ userId, storeId }) {
   if (!store) {
     return null;
   }
-  const conn = await connectDb();
+  const conn = await connectAppDb();
   const acl = await conn.collection('aclentries').findOne({
     resourceType: 'memoryStore',
     resourceId: new mongoose.Types.ObjectId(String(storeId)),
@@ -180,7 +180,7 @@ export async function writableStore({ userId, storeId }) {
   if (access.isOwner) {
     return access;
   }
-  const conn = await connectDb();
+  const conn = await connectAppDb();
   const entry = await conn.collection('aclentries').findOne({
     resourceType: 'memoryStore',
     resourceId: new mongoose.Types.ObjectId(String(access.store._id)),
