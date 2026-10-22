@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import mongoose from 'mongoose';
-import { connectAppDb } from '../db.mjs';
+import { connectAppDb, models } from '../db.mjs';
 import { extractionMethods } from './database.mjs';
 import { writableStore } from '../backend/memories.mjs';
 import { getExtractionPrompt } from '../backend/extraction-prompt.mjs';
@@ -65,6 +65,34 @@ async function setConversationDomains({ userId, conversationId, domainIds }) {
       { conversationId, user: String(userId) },
       { $set: { activeDomainIds: domainIds } },
     );
+}
+
+async function attachmentsFromWrites({ userId, storeId, conversationId, messageId, since }) {
+  const db = await models();
+  const versions = await db.MemoryVersion.find({
+    storeId: String(storeId),
+    createdAt: { $gte: since },
+  })
+    .sort({ createdAt: 1 })
+    .lean();
+  const latest = new Map();
+  for (const version of versions) {
+    latest.set(version.key, version);
+  }
+  return [...latest.values()].map((version) => ({
+    type: 'memory',
+    messageId,
+    conversationId,
+    memory: {
+      key: version.key,
+      value: version.value,
+      ...(Array.isArray(version.tags) && version.tags.length > 0 ? { tags: version.tags } : {}),
+      tokenCount: version.tokenCount ?? 0,
+      type: 'update',
+      storeId: String(storeId),
+      ...(version.domainId ? { domainId: version.domainId } : {}),
+    },
+  }));
 }
 
 /** Builds the original processor and runs one extraction window. */
@@ -133,6 +161,16 @@ export async function runExtraction({
   if (typeof processMemory !== 'function') {
     return { attachments: [], withoutKeys };
   }
-  const attachments = await processMemory(toMessages(messages), signal);
-  return { attachments: attachments ?? [], withoutKeys };
+  const startedAt = new Date();
+  await processMemory(toMessages(messages), signal);
+  const attachments = await attachmentsFromWrites({
+    userId: ownerId,
+    storeId,
+    conversationId,
+    messageId,
+    since: startedAt,
+  }).catch(() => []);
+  return { attachments, withoutKeys };
 }
+
+export { attachmentsFromWrites };

@@ -10,7 +10,7 @@ let models;
 before(async () => {
   server = await MongoMemoryServer.create();
   process.env.MONGO_URI = server.getUri();
-  ({ attachmentsFromWrites } = await import('../index.mjs'));
+  ({ attachmentsFromWrites } = await import('../extraction/processor.mjs'));
   ({ models } = await import('../db.mjs'));
 });
 
