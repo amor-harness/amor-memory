@@ -17,6 +17,16 @@ It organizes long-term memory as **store → domain → entry**, and provides au
 - **Image memory**: normalization, dHash deduplication, image vectors, text/image cross-search
 - **UI**: memory panel, message cards, and agent memory settings
 
+## Plugin dependencies
+
+Memory requires these plugins in the host:
+
+- `database` — shared MongoDB / PostgreSQL connections
+- `permissions` — store sharing and access control
+- `agent-runtime` — agent runs used by extraction
+
+The `required` field in `plugin.json` declares all three.
+
 ## Requirements
 
 - MongoDB for memory entries, stores, domains, and versions
@@ -44,9 +54,13 @@ limits      token/character limits
 
 ## Installation
 
-This is a cordis plugin package, not a standalone service. Place the package contents in Amor's plugin directory:
+This is a cordis plugin package, not a standalone service. It depends on the `database` plugin for shared MongoDB/PostgreSQL connections and creates the pgvector tables it needs on startup.
 
 ```text
+plugin/database/
+  plugin.json
+  runtime/
+
 plugin/memory/
   plugin.json
   runtime/

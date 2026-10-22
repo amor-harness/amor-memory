@@ -17,6 +17,16 @@ Amor 的记忆系统插件。
 - **图片记忆**：归一化、dHash 去重、图片向量、图文互搜
 - **UI**：记忆面板、消息卡片、agent 记忆设置
 
+## 插件依赖
+
+运行 memory 需要以下插件同时存在：
+
+- `database`：共享 MongoDB / PostgreSQL 连接
+- `permissions`：store 共享与访问控制
+- `agent-runtime`：抽取阶段的 agent run
+
+`plugin.json` 的 `required` 已声明这三项。
+
 ## 依赖
 
 - MongoDB（记忆条目、store、domain、版本）
@@ -44,9 +54,13 @@ limits      token/字符上限
 
 ## 安装
 
-这是一个 cordis 插件包，不是一个独立服务。把包内容放到 Amor 的插件目录：
+这是一个 cordis 插件包，不是一个独立服务。它依赖 `database` 插件提供共享 MongoDB/PostgreSQL 连接，并在启动时自动确保 pgvector 表存在。
 
 ```text
+plugin/database/
+  plugin.json
+  runtime/
+
 plugin/memory/
   plugin.json
   runtime/
