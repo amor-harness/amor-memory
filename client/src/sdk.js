@@ -10,7 +10,7 @@ const passthrough = new Proxy(
 
 export const Permissions = passthrough;
 export const PermissionTypes = passthrough;
-export const ResourceType = passthrough;
+export const ResourceType = { MEMORYSTORE: 'memoryStore' };
 export const QueryKeys = passthrough;
 export const SystemRoles = passthrough;
 

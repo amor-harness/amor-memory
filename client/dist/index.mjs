@@ -462,7 +462,7 @@ var passthrough = new Proxy(
 );
 var Permissions = passthrough;
 var PermissionTypes = passthrough;
-var ResourceType = passthrough;
+var ResourceType = { MEMORYSTORE: "memoryStore" };
 var QueryKeys = passthrough;
 var MEMORY_DOMAIN_KINDS = ["real", "fictional", "project", "sandbox", "study", "work"];
 
