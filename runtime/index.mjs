@@ -20,6 +20,7 @@ import { vfsDelete, vfsDomains, vfsImage, vfsList, vfsSet } from './backend/vfs.
 import { defaultStore, formattedMemories, resolveStore } from './backend/store.mjs';
 import { handleProviderOperation } from './vfs/provider.mjs';
 import { domainScope, registerDomainTools } from './domain/register.mjs';
+import { extractionMethods } from './extraction/database.mjs';
 import { runExtraction } from './extraction/processor.mjs';
 import { registerMemoryVectorSync } from './extraction/vector-sync.mjs';
 import * as extraction from './extraction/index.mjs';
@@ -557,7 +558,38 @@ export default {
             return null;
           }
           try {
-            const result = await preparePluginRecall(payload);
+            await ensureActiveDatabase();
+            const methodSet = await extractionMethods();
+            const contextMemoryKeys = new Set(
+              await methodSet.getConversationMemoryKeys({
+                userId: payload.userId,
+                conversationId: String(payload.conversationId),
+              }),
+            );
+            const scope = await domainScope({
+              userId: payload.userId,
+              storeId: payload.storeId,
+              conversationDomainIds: payload.conversationDomainIds,
+              agentDomainIds: payload.agent?.memory_domains,
+            });
+            const result = await preparePluginRecall({
+              ...payload,
+              domainIds: scope?.domainIds,
+              contextMemoryKeys,
+            });
+            if (result != null && Array.isArray(result.entries) && result.entries.length > 0) {
+              await methodSet
+                .markMemoriesRecalled({
+                  userId: payload.userId,
+                  storeId: payload.storeId,
+                  conversationId: String(payload.conversationId),
+                  turnId: payload.turnId,
+                  keys: [...new Set(result.entries.map((entry) => entry.key))],
+                })
+                .catch((error) =>
+                  console.error('[memory-plugin] failed to mark recalled memories:', error),
+                );
+            }
             return result ?? null;
           } catch (error) {
             console.error('[memory-plugin] local recall failed:', error);
@@ -565,12 +597,90 @@ export default {
           }
         });
         registeredHooks.push('chat.beforeRun');
+        kernel.hook('conversation.deleted', async (payload) => {
+          await ensureActiveDatabase();
+          const methodSet = await extractionMethods();
+          await methodSet.deleteConversationMemories({
+            userId: payload?.userId,
+            conversationId: payload?.conversationIds,
+          });
+          return { ok: true };
+        });
+        registeredHooks.push('conversation.deleted');
+        kernel.hook('image.ingest', async (payload) => {
+          await ensureActiveDatabase();
+          if (payload?.url != null) {
+            return ingestImageUrl({ ...payload, userId: payload.userId });
+          }
+          if (payload?.data != null) {
+            return ingestImageBuffer({ ...payload, userId: payload.userId });
+          }
+          return null;
+        });
+        registeredHooks.push('image.ingest');
+        kernel.hook('vfs.memory', async (payload) => {
+          await ensureActiveDatabase();
+          const params = payload?.params ?? {};
+          switch (payload?.method) {
+            case 'resolve':
+              return resolveStore(params);
+            case 'default':
+              return defaultStore(params);
+            case 'list':
+              return vfsList(params);
+            case 'domains':
+              return vfsDomains(params);
+            case 'set':
+              return vfsSet(params);
+            case 'delete':
+              return vfsDelete(params);
+            case 'image':
+              return vfsImage(params);
+            default:
+              return null;
+          }
+        });
+        registeredHooks.push('vfs.memory');
+        kernel.hook('allConversations.deleted', async (payload) => {
+          await ensureActiveDatabase();
+          const methodSet = await extractionMethods();
+          await methodSet.deleteAllConversationMemories(payload?.userId);
+          return { ok: true };
+        });
+        registeredHooks.push('allConversations.deleted');
+        kernel.hook('conversation.compacted', async (payload) => {
+          await ensureActiveDatabase();
+          const methodSet = await extractionMethods();
+          await methodSet.deleteCompactedConversationMemories({
+            userId: payload?.userId,
+            conversationId: payload?.conversationId,
+            retainedFromMessageId: payload?.retainedFromMessageId,
+          });
+          return { ok: true };
+        });
+        registeredHooks.push('conversation.compacted');
+        kernel.hook('user.deleted', async (payload) => {
+          await ensureActiveDatabase();
+          const methodSet = await extractionMethods();
+          await methodSet.deleteAllUserMemories(payload?.userId);
+          await methodSet.deleteAllUserMemoryImages(payload?.userId);
+          await methodSet.deleteAllConversationMemories(payload?.userId);
+          return { ok: true };
+        });
+        registeredHooks.push('user.deleted');
         kernel.hook('prompt.inject', async (payload) => {
           if (payload?.storeId == null) {
             return null;
           }
           try {
-            const result = await prepareInjection(payload);
+            await ensureActiveDatabase();
+            const scope = await domainScope({
+              userId: payload.userId,
+              storeId: payload.storeId,
+              conversationDomainIds: payload.conversationDomainIds,
+              agentDomainIds: payload.agent?.memory_domains,
+            });
+            const result = await prepareInjection({ ...payload, scope });
             return result == null
               ? null
               : {
