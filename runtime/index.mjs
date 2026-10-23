@@ -510,9 +510,13 @@ export default {
     ctx.kernel.expose('memory.vfs.delete', async (params, meta) =>
       vfsDelete({ ...(params ?? {}), userId: meta?.userId }),
     );
-    ctx.kernel.expose('memory.vfs.provider', async (params) =>
-      handleProviderOperation(params ?? {}),
-    );
+    ctx.kernel.expose('memory.vfs.provider', async (params, meta) => {
+      const request = params ?? {};
+      if (meta?.userId && request.ctx?.req?.user) {
+        request.ctx.req.user.id = meta.userId;
+      }
+      return handleProviderOperation(request);
+    });
     ctx.kernel.expose('memory.vfs.image', async (params, meta) =>
       vfsImage({ ...(params ?? {}), userId: meta?.userId }),
     );

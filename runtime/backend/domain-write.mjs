@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { connectAppDb, models } from '../db.mjs';
-import { requirePermission } from './memories.mjs';
+import { readableStore, requirePermission, writableStore } from './memories.mjs';
 import { dropEntryVector } from './vectors.mjs';
 
 const KINDS = ['real', 'fictional', 'project', 'sandbox', 'study', 'work'];
@@ -19,10 +19,8 @@ function validateName(name) {
   return null;
 }
 
-async function ownedStore({ userId, storeId }) {
-  const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
-  return db.MemoryStore.findOne({ _id: storeId, userId: user }).lean();
+async function writableAccess({ userId, storeId }) {
+  return writableStore({ userId, storeId });
 }
 
 export async function createDomain({ userId, role, storeId, name, kind, description }) {
@@ -34,12 +32,13 @@ export async function createDomain({ userId, role, storeId, name, kind, descript
   if (!KINDS.includes(kind)) {
     return fail(400, 'Invalid memory domain kind.');
   }
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await writableAccess({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(access.ownerId));
   const existing = await db.MemoryDomain.findOne({
     storeId: String(store._id),
     name: name.trim(),
@@ -72,10 +71,11 @@ export async function createDomain({ userId, role, storeId, name, kind, descript
 
 export async function updateDomain({ userId, role, storeId, domainId, name, kind, description }) {
   await requirePermission({ userId, role, permissions: ['USE', 'UPDATE'] });
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await writableAccess({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
   if (name !== undefined) {
     const error = validateName(name);
     if (error) {
@@ -128,10 +128,11 @@ export async function updateDomain({ userId, role, storeId, domainId, name, kind
 
 export async function deleteDomain({ userId, role, storeId, domainId, force = false }) {
   await requirePermission({ userId, role, permissions: ['USE', 'UPDATE'] });
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await writableAccess({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
   const db = await models();
   const domain = await db.MemoryDomain.findOne({ _id: domainId, storeId: String(store._id) }).lean();
   if (!domain) {
@@ -141,7 +142,7 @@ export async function deleteDomain({ userId, role, storeId, domainId, force = fa
     return fail(400, 'The default memory domain cannot be deleted.');
   }
   const entries = await db.MemoryEntry.find({
-    userId: new mongoose.Types.ObjectId(String(userId)),
+    userId: new mongoose.Types.ObjectId(String(access.ownerId)),
     storeId: String(store._id),
     domainId: String(domain._id),
   }).lean();
@@ -171,10 +172,11 @@ export async function setActiveDomains({ userId, role, storeId, conversationId, 
   if (!Array.isArray(domainIds)) {
     return fail(400, 'domainIds must be an array.');
   }
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await readableStore({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
   const db = await models();
   const conn = await connectAppDb();
   const convo = await conn
