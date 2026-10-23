@@ -3,7 +3,7 @@ import { models } from '../db.mjs';
 import { memoryEnv } from './config.mjs';
 import { countTokens } from './tokens.mjs';
 import { dropEntryVector, syncEntryVector } from './vectors.mjs';
-import { ownedStore, requirePermission, stripTags, tagsOf } from './memories.mjs';
+import { writableStore, requirePermission, stripTags, tagsOf } from './memories.mjs';
 import { resetLexicalIndexes } from '../recall/lexical.mjs';
 
 const KEY_PATTERN = /^[a-z0-9_]+$/;
@@ -31,13 +31,6 @@ function fail(status, error) {
   return { ok: false, status, error };
 }
 
-async function resolveStore({ userId, storeId }) {
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
-    return null;
-  }
-  return store;
-}
 
 async function ensureDomain({ db, userId, storeId, domainId }) {
   if (domainId) {
@@ -96,12 +89,14 @@ export async function createMemory({
   if (value.length > charLimit()) {
     return fail(400, `Memory value exceeds the ${charLimit()} character limit.`);
   }
-  const store = await resolveStore({ userId, storeId });
-  if (!store) {
+  const access = await writableStore({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
+  const ownerId = access.ownerId;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(ownerId));
   const resolvedStoreId = String(store._id);
   const existing = await db.MemoryEntry.findOne({ userId: user, storeId: resolvedStoreId, key: key.trim() }).lean();
   if (existing) {
@@ -183,12 +178,14 @@ export async function updateMemory({
   locked,
 }) {
   await requirePermission({ userId, role, permissions: ['USE', 'UPDATE'] });
-  const store = await resolveStore({ userId, storeId });
-  if (!store) {
+  const access = await writableStore({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
+  const ownerId = access.ownerId;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(ownerId));
   const resolvedStoreId = String(store._id);
   const existing = await db.MemoryEntry.findOne({ userId: user, storeId: resolvedStoreId, key }).lean();
   if (!existing) {
@@ -248,12 +245,14 @@ export async function updateMemory({
 
 export async function deleteMemory({ userId, role, storeId, key }) {
   await requirePermission({ userId, role, permissions: ['USE', 'UPDATE'] });
-  const store = await resolveStore({ userId, storeId });
-  if (!store) {
+  const access = await writableStore({ userId, storeId });
+  if (!access) {
     return fail(404, 'Memory store not found.');
   }
+  const store = access.store;
+  const ownerId = access.ownerId;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(ownerId));
   const entry = await db.MemoryEntry.findOneAndDelete({
     userId: user,
     storeId: String(store._id),
