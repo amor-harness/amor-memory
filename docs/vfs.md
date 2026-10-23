@@ -1,19 +1,8 @@
-# `/memory` 虚拟文件系统
+# `/memory` VFS
 
-## 1. 挂载
+memory 插件注册 `/memory` provider，把记忆映射为可被 agent 文件工具访问的文件树。
 
-memory 系统挂载 `/memory` provider，负责全部路径语义：
-
-```text
-/memory
-  ├─ domain 文件夹
-  ├─ <key>.md
-  ├─ INDEX.yaml
-  ├─ EXTRACTION.md
-  └─ images/
-```
-
-## 2. 目录结构
+## 路径
 
 ```text
 /memory/
@@ -26,75 +15,81 @@ memory 系统挂载 `/memory` provider，负责全部路径语义：
     <id>.<ext>
 ```
 
-- 一个 domain 一个文件夹；
-- 一个记忆一个 `.md` 文件；
-- 文件内容就是 memory value；
-- 文件名去掉 `.md` 就是 key。
+- 一个 domain 一个文件夹，文件夹名来自 domain `name`
+- 默认 domain 的 key 可以放在根目录，也可以放在 domain 文件夹
+- 文件名去掉 `.md` 就是记忆 key
+- `images/` 是只读图片视图
 
-## 3. 操作
+## 文件语义
 
-provider 实现：
+| 路径 | 读写 |
+|---|---|
+| `<key>.md` | 读/写/删除记忆 |
+| `<domain>/<key>.md` | 读/写/删除该 domain 的记忆 |
+| `INDEX.yaml` | 只读索引 |
+| `EXTRACTION.md` | 每用户抽取提示词，可读写/清除 |
+| `images/<id>.<ext>` | 只读图片 |
 
-| 操作     | 语义                                            |
-| -------- | ----------------------------------------------- |
-| `list`   | 列出 domain 文件夹、记忆文件、INDEX、EXTRACTION |
-| `read`   | 读取记忆、INDEX 或 EXTRACTION                   |
-| `write`  | 创建/更新记忆，或写 EXTRACTION                  |
-| `delete` | 删除记忆或清空 EXTRACTION                       |
-| `move`   | 同 domain 重命名，跨 domain 改 domainId         |
-| `search` | 内容匹配，返回 `path:line:text`                 |
-| `glob`   | 路径 glob                                       |
+## INDEX.yaml
 
-## 4. `INDEX.yaml`
+只读，动态生成：
 
-只读索引：
+- `stable:`：stable 记忆 key
+- `today:`：今天创建/修改的 ephemeral 记忆
+- `tags:`：store 中最常用的标签（有上限）
 
-- `stable:`：stable 记忆 key；
-- `today:`：今天创建/修改的 ephemeral 记忆；
-- 不允许写入或删除；
-- 由 provider 动态生成，不落库。
+不允许写/删除；stable 需从面板切换。
 
-## 5. `EXTRACTION.md`
+## EXTRACTION.md
 
-每用户抽取提示词：
+- 存储在 `memoryextractionprompts`，`userId` 唯一
+- 非空内容覆盖抽取 instructions
+- 空内容 / 删除 → 回退到 agent 或默认提示词
+- 只按 userId 隔离，不受 store 共享影响
 
-- 存储于 `memoryextractionprompts`；
-- `userId` 唯一；
-- 读取时按当前用户隔离；
-- 写入非空内容 → upsert；
-- 写入空内容或删除 → 清除自定义提示词；
-- extraction 优先使用它，空则回退 agent/default。
-
-## 6. 写入语义
+## 写入
 
 写 `<domain>/<key>.md`：
 
-1. 校验 key；
-2. 解析 domain 文件夹；
-3. 调 `memory.vfs.set`；
-4. 写 memory entry；
-5. 写 version；
-6. 写 conversation link（如果带 conversationId）；
-7. 发 `onMemoryChange`。
+1. 校验 key 和 domain
+2. 解析当前 store 的 writable 权限
+3. 调 `vfsSet` 写入 entry
+4. 写 version 和 conversation link（如带 conversationId）
+5. 发 change event → 向量同步
 
 删除：
 
-- stable 记忆禁止删除；
-- locked 记忆允许由 VFS 删除；
-- 删除后清向量并更新索引。
+- 普通记忆可删
+- stable 记忆不能直接删，需先从面板移除 stable
+- locked 记忆允许 VFS 删除（`allowLocked: true`）
+- 删除后清版本/关联/向量
 
-## 7. 权限
+## 操作
 
-- `readableStore`：owner 或共享 VIEW；
-- `writableStore`：owner 或共享 EDIT；
-- 只读共享 store 可以读 `/memory`，但不能写；
-- 用户级 `EXTRACTION.md` 不受 store 共享影响，始终按 userId 隔离。
+provider 支持：
 
-## 8. 图片
+- `list`：根目录、domain 文件夹、images
+- `read`：记忆、INDEX、EXTRACTION、图片
+- `write`：创建/更新记忆或 EXTRACTION
+- `delete`：删除记忆、清空 EXTRACTION
+- `search`：内容匹配，返回 `path:line:text`
+- `glob`：路径 glob
+
+move/copy 由 VFS 引擎路由到写/删组合；provider 不单独维护第二套语义。
+
+## 权限
+
+- 读：owner 或共享 VIEW
+- 写：owner 或共享 EDIT
+- 只读共享 store 可读 `/memory`，不能写
+- 默认 store 读写也受用户级 `memories` 开关影响
+- EXTRACTION.md 始终按 userId 隔离
+
+## 图片
 
 `/memory/images/<id>.<ext>`：
 
-- 读取 `memoryimages` 的原始 bytes；
-- 支持 sha256 / 数字 id 两种路径；
-- 返回 image mime；
-- 不经过文本记忆列表。
+- 按数字 id 或 sha256 查找
+- 返回原始 bytes 和 mime
+- 只读；删除走面板或 `memories.images.delete`
+- 不参与文本记忆列表

@@ -1,25 +1,24 @@
-# Embedding 与 Rerank 服务要求
+# Embedding 与 Rerank 服务
 
-memory 系统依赖两个 HTTP 服务：
+memory 通过 HTTP 调用两个可选服务：
 
 ```text
 embedding  文本/图片向量
-rerank     cross-encoder 候选重排
+rerank     候选重排
 ```
 
-两者都按 Jina/OpenAI 风格的 `/v1/...` JSON API 调用。
+两者都使用 Jina 风格的 `/v1/...` JSON API。服务不可用时 memory 会降级，不阻断对话。
 
-## 1. Embedding 服务
+## Embedding
 
 ### 端点
 
 ```http
 POST {MEMORY_EMBED_URL}/v1/embeddings
 Content-Type: application/json
-Authorization: Bearer <MEMORY_EMBED_TOKEN>   # 可选
 ```
 
-### 文本请求
+### 文本
 
 ```json
 {
@@ -29,76 +28,55 @@ Authorization: Bearer <MEMORY_EMBED_TOKEN>   # 可选
 }
 ```
 
-`task` 取值：
+`task`：
 
-- `retrieval.query`：召回 query；
-- `retrieval.passage`：记忆正文、图片。
+- `retrieval.query`：召回 query
+- `retrieval.passage`：记忆正文、图片文本
 
-### 图片请求
+### 图片
 
 ```json
 {
   "model": "jina-embeddings-v5-omni-small",
-  "input": [
-    {
-      "image": "data:image/png;base64,...."
-    }
-  ],
+  "input": [{ "image": "data:image/png;base64,..." }],
   "task": "retrieval.passage"
 }
 ```
 
-文本和图片使用同一个 embedding 模型；模型必须支持多模态输入。
+模型必须支持多模态输入；文本和图片共用同一模型。
 
 ### 响应
 
 ```json
-{
-  "data": [
-    {
-      "embedding": [0.123, -0.456, 0.789]
-    }
-  ]
-}
+{ "data": [{ "embedding": [0.123, -0.456, 0.789] }] }
 ```
 
 要求：
 
-- `data[0].embedding` 是非空数字数组；
-- 向量维度固定，且与 pgvector 表的列维度一致；
-- 不要求返回 `index`、`object` 等额外字段；
-- 一次请求只发一个 input，不依赖批量接口。
+- `data[0].embedding` 是非空数字数组
+- 维度与 pgvector 表一致（`MEMORY_EMBED_DIM` / `MEMORY_IMAGE_DIM`）
+- 一次请求一个 input；不要求 batch/index 字段
 
 ### 超时
 
-| 用途           | 配置                           | 默认  |
-| -------------- | ------------------------------ | ----- |
-| 文本 embedding | `MEMORY_EMBED_TIMEOUT_MS`      | 30000 |
+| 用途 | 配置 | 默认 |
+|---|---|---:|
+| 文本 | `MEMORY_EMBED_TIMEOUT_MS` | 30000 |
 | 图片文本 query | `MEMORY_IMAGE_TEXT_TIMEOUT_MS` | 15000 |
-| 图片 embedding | `MEMORY_IMAGE_TIMEOUT_MS`      | 60000 |
+| 图片 | `MEMORY_IMAGE_TIMEOUT_MS` | 60000 |
 
-超时或 HTTP 非 2xx：
+失败：
 
-- 文本 embedding 抛错，召回阶段降级；
-- 图片 embedding 返回 `null`，图片仍入库但 `embedded: false`。
+- 文本 → 丢弃向量召回，标签/词法继续
+- 图片 → 图片仍入库，`embedded: false`
 
-### 认证与代理
-
-| 变量                 | 作用                                         |
-| -------------------- | -------------------------------------------- |
-| `MEMORY_EMBED_TOKEN` | 加 `Authorization: Bearer ...`               |
-| `MEMORY_EMBED_PROXY` | 通过 HTTP 代理访问                           |
-| `MEMORY_EMBED_URL`   | 服务根地址，不含 `/v1`                       |
-| `MEMORY_EMBED_MODEL` | 模型名，默认 `jina-embeddings-v5-omni-small` |
-
-## 2. Rerank 服务
+## Rerank
 
 ### 端点
 
 ```http
 POST {MEMORY_RERANK_URL}/v1/rerank
 Content-Type: application/json
-Authorization: Bearer <MEMORY_RERANK_TOKEN>   # 可选
 ```
 
 ### 请求
@@ -125,49 +103,31 @@ Authorization: Bearer <MEMORY_RERANK_TOKEN>   # 可选
 
 要求：
 
-- `results[].index` 必须对应请求里的 document 下标；
-- `relevance_score` 可以是负数；
-- 分数只在同一次请求内可比，不能跨请求做绝对阈值；
-- 允许返回顺序与输入不同；
-- 每个候选都必须有分数；缺一个分数就整体放弃本次重排，保留原向量顺序。
+- `index` 必须对应请求中的 document 下标
+- `relevance_score` 可正可负，只在同一次请求内可比
+- 每个候选都要有分数；缺一个就整体放弃本次重排，保留原顺序
+- 允许返回顺序与输入不同
 
 ### 超时
 
-| 配置                    | 默认  |
-| ----------------------- | ----- |
-| `MEMORY_RERANK_TIMEOUT` | 15000 |
+`MEMORY_RERANK_TIMEOUT`，默认 15000ms。失败/超时只记日志，不阻断本轮。
 
-失败、超时、分数不完整：
+## 认证与代理
 
-- 记日志；
-- 返回原候选顺序；
-- 不阻断本轮对话。
+`MEMORY_EMBED_TOKEN` / `MEMORY_RERANK_TOKEN` 会加 Bearer header；`MEMORY_EMBED_PROXY` / `MEMORY_RERANK_PROXY` 通过 undici ProxyAgent。
 
-### 认证与代理
+注意：token/proxy 当前直接读进程环境变量，不走 `config.json` 的扁平键；服务地址、模型、超时等仍可通过配置覆盖。
 
-| 变量                  | 作用                      |
-| --------------------- | ------------------------- |
-| `MEMORY_RERANK_TOKEN` | Bearer token              |
-| `MEMORY_RERANK_PROXY` | HTTP 代理                 |
-| `MEMORY_RERANK_URL`   | 服务根地址，不含 `/v1`    |
-| `MEMORY_RERANK_MODEL` | 默认 `jina-reranker-v3.5` |
+## PostgreSQL / pgvector
 
-## 3. PostgreSQL / pgvector
+向量存储由 database 插件提供连接。memory 首次启动时创建：
 
-向量召回需要 PostgreSQL 与 pgvector 扩展。连接由 `database` 插件提供，memory 不需要额外的数据库连接配置。
+- `memory_vectors`
+- `image_vectors`
 
-memory 首次启动时会自动创建向量表；已有表不会被覆盖。
+已有表不会被覆盖。更换 embedding 模型或维度后，需要重建表并重新生成所有向量。
 
-向量维度必须与 embedding 模型一致：
-
-```text
-MEMORY_EMBED_DIM
-MEMORY_IMAGE_DIM
-```
-
-更换 embedding 模型时，需要重建向量表并重新生成已有记忆和图片的向量。
-
-## 4. 健康检查
+## 健康检查
 
 ```bash
 curl -s http://127.0.0.1:8788/v1/embeddings \
@@ -179,11 +139,9 @@ curl -s http://127.0.0.1:8787/v1/rerank \
   -d '{"model":"jina-reranker-v3.5","query":"ping","documents":["pong"],"return_documents":false}'
 ```
 
-## 5. 最小兼容实现
+## 最小兼容实现
 
-只要满足下面两点，就可以替换成自建服务：
+- embedding：接收 `input` / `task`，返回 `data[0].embedding`
+- rerank：接收 `query` / `documents`，返回 `results[].index` + `results[].relevance_score`
 
-- embedding：接收 `input`/`task`，返回 `data[0].embedding`；
-- rerank：接收 `query`/`documents`，返回 `results[].index` + `results[].relevance_score`。
-
-不需要实现流式响应、批量输入或文档回传。
+不需要流式、批量或文档回传。

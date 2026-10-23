@@ -2,82 +2,134 @@
 
 [中文](./README.md) · **English**
 
-The memory system plugin for Amor.
-
-It organizes long-term memory as **store → domain → entry**, and provides automatic extraction, hybrid recall, prompt injection, a `/memory` virtual file system, and image memory.
+The long-term memory plugin for Amor. It organizes memory as **store → domain → entry** and owns automatic extraction, hybrid recall, prompt injection, the `/memory` virtual file system, and image memory.
 
 ## Capabilities
 
-- **Memory stores**: multiple stores, default store, sharing and ACL
-- **Domains**: real life, fiction, projects, work, and other contexts
-- **Automatic extraction**: extract facts asynchronously after a reply, using `set_memory` / `append_memory` / `delete_memory`
-- **Hybrid recall**: vectors + tags + lexical + cross-encoder + time decay + MMR
+- **Memory stores**: multiple stores, a default store, sharing, and ACL
+- **Domains**: real-life, fictional, project, work, and other contexts; domains constrain both reads and writes
+- **Automatic extraction**: extract facts asynchronously after a reply with `set_memory` / `append_memory` / `delete_memory`
+- **Hybrid recall**: vectors + tags + lexical search + cross-encoder + time decay + MMR
 - **Injection**: a stable system baseline plus a per-turn dynamic context
 - **VFS**: `/memory/<domain>/<key>.md`, `INDEX.yaml`, and a per-user `EXTRACTION.md`
-- **Image memory**: normalization, dHash deduplication, image vectors, text/image cross-search
-- **UI**: memory panel, message cards, and agent memory settings
+- **Image memory**: normalization, dHash near-duplicate detection, image vectors, text/image cross-search
+- **UI**: memory panel, message cards, agent memory settings, and store sharing
+
+Memory is isolated per user. A store is the isolation unit. Stable memories form the baseline, while ephemeral memories are recalled per turn; the two paths never inject the same key twice.
+
+## Architecture
+
+```text
+Browser UI
+  ├─ memory panel / message cards / agent settings
+  └─ plugin API
+        │
+        ▼
+memory runtime (plugin kernel child process)
+  ├─ turn, conversation, image, and VFS lifecycle events
+  ├─ plugin API for memories and stores
+  ├─ extraction, recall, injection, images
+  └─ /memory VFS provider
+        │
+        ├─ MongoDB: store / domain / entry / version / image
+        └─ PostgreSQL + pgvector: text and image vectors
+```
+
+The host only notifies the plugin at the right turn boundaries; the plugin owns memory reads, writes, recall, and formatting.
 
 ## Requirements
 
-- MongoDB for memory entries, stores, domains, and versions
-- PostgreSQL + pgvector for text and image vectors
-- An OpenAI-compatible embedding service
-- An optional cross-encoder rerank service
+The plugin runs inside an Amor plugin host and needs:
 
-## Configuration
+- **database** — MongoDB and PostgreSQL/pgvector connections
+- **permissions** — store ACL and sharing
+- **i18n** — client translations
+- **agent-runtime** — agent lifecycle and tool runtime
 
-Copy `config.example.json` to `config.json` and fill in the embedding and rerank endpoints for your deployment.
-
-Main configuration groups:
-
-```text
-embedding   embedding service and dimensions
-rerank      cross-encoder
-recall      candidate count, injection count, similarity thresholds
-tags        tag-recall parameters
-images      image vectors and recall thresholds
-decay       time decay
-mmr         redundancy reduction
-limits      token/character limits
-```
+It also uses optional embedding and rerank HTTP services. Without embeddings, recall falls back to tags and lexical search; without a reranker, the original ordering is kept.
 
 ## Installation
 
-This is a cordis plugin package, not a standalone service. It depends on the `database` plugin for MongoDB and PostgreSQL/pgvector connectivity, and creates the vector tables it needs on first startup.
+Place the directory in the host's plugin root (for example `plugin/memory`); `plugin.json` defines the entries. Copy `config.example.json` to `config.json`, fill in the embedding/rerank endpoints, then build:
 
-```text
-plugin/database/
-  plugin.json
-  runtime/
-
-plugin/memory/
-  plugin.json
-  runtime/
-  client/dist/
-  config.json
-  docs/
+```bash
+npm install
+npm run build
 ```
 
-`plugin.json` points to:
+The build uses shared packages from the host monorepo (`@amor-harness/api` / `data-provider` / `data-schemas`). A standalone clone needs those packages resolvable.
+
+## Configuration
+
+`config.json` is a flat key map grouped by concern:
 
 ```json
 {
-  "client": { "entry": "./client/dist/index.mjs" },
-  "runtime": { "entry": "./runtime/index.mjs" }
+  "embedding": { "MEMORY_EMBED_URL": "http://127.0.0.1:8788", "MEMORY_EMBED_DIM": "1024" },
+  "rerank": { "MEMORY_RERANK_URL": "http://127.0.0.1:8787" },
+  "recall": { "MEMORY_RAG_CANDIDATES": "15", "MEMORY_RAG_LIMIT": "3" }
 }
 ```
 
+Environment variables override the file. See [docs/config.md](./docs/config.md) for every field, defaults, and tuning guidance.
+
+## Usage
+
+### UI
+
+- Sidebar **Memories**: browse, search, create, edit, delete, toggle stable/locked, and inspect versions
+- Message cards: **memory updated** / **recalled** results for the turn
+- Agent settings → Memory: choose the memory store and domains
+- Sharing dialog: share a store with users, groups, or public access
+
+### Automatic extraction
+
+After a message is persisted, the plugin reads the conversation window asynchronously and writes memories through tools. It never blocks the reply. Extractions for one conversation are serialized, and a new turn interrupts the previous extraction.
+
+### Recall and injection
+
+Before a turn, the plugin recalls ephemeral memories from the active store and domains. Stable memories form a separately cacheable system baseline. Both paths deduplicate keys and never spend tokens on the same memory twice.
+
+### VFS
+
+```text
+/memory/
+  INDEX.yaml
+  EXTRACTION.md
+  <domain>/<key>.md
+  <key>.md
+  images/<id>.<ext>
+```
+
+`INDEX.yaml` is read-only; `EXTRACTION.md` is the user's extraction prompt; ordinary memory files are writable. See [docs/vfs.md](./docs/vfs.md).
+
 ## Documentation
 
-See [docs/README.md](./docs/README.md) for the full design:
+- [Documentation index](./docs/README.md)
+- [Architecture](./docs/architecture.md)
+- [Data model](./docs/data-model.md)
+- [Extraction](./docs/extraction.md)
+- [Recall](./docs/recall.md)
+- [Injection](./docs/injection.md)
+- [Client](./docs/client.md)
+- [RPC](./docs/rpc.md)
+- [VFS](./docs/vfs.md)
+- [Images](./docs/images.md)
+- [Services](./docs/services.md)
+- [Configuration](./docs/config.md)
+- [Testing](./docs/testing.md)
 
-- Architecture and lifecycle
-- Data model
-- Extraction, recall, and injection algorithms
-- VFS and image memory
-- Configuration and testing
-- Embedding and rerank service API requirements
+## Development
+
+```bash
+npm run typecheck
+npm run typecheck:client
+npm run build
+npm test
+```
+
+Artifacts: `runtime/dist/index.mjs` and `client/dist/index.mjs`. See [docs/testing.md](./docs/testing.md) for tests and end-to-end verification.
 
 ## License
 
-MIT.
+MIT

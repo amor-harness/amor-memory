@@ -1,182 +1,112 @@
-# 记忆系统架构
+# 架构
 
-## 1. 目标
+## 进程边界
 
-memory 系统负责：
+memory 插件运行在插件 kernel 的独立 Node 进程，浏览器 UI 以 ESM 模块加载。两侧不共享对象，只通过 kernel 的 hook 和 JSON-RPC 通信。
 
-- 保存用户与 agent 的长期信息；
-- 从对话中自动提取记忆；
-- 在下一轮对话前召回相关记忆；
-- 把稳定记忆和动态召回注入 prompt；
-- 通过 `/memory` 虚拟文件系统提供可读写的记忆视图；
-- 保存和召回图片记忆。
-
-核心约束：
-
-- 记忆按用户隔离；
-- store 是记忆的隔离单元；
-- domain 同时决定读取范围和写入归属；
-- stable 与 ephemeral 分开处理；
-- 写入、召回、注入都不能阻塞对话主流程。
-
-## 2. 系统分层
-
-```
-交互层
-  ├─ 记忆面板：列表、搜索、编辑、stable/locked
-  ├─ 消息卡片：本轮 memory updated / recalled
-  ├─ agent 设置：memory store、domains
-  └─ /memory VFS：文件式读写
-
-编排层
-  ├─ turn 生命周期：读取 → 注入 → 回复 → 抽取
-  ├─ 抽取调度：按会话串行、可中断、可排队
-  └─ 写入编排：store/domain 解析、版本、链接、向量
-
-算法层
-  ├─ 抽取：对话窗口 → memory 工具调用
-  ├─ 召回：向量 + 标签 + 词法 + 重排 + 选择
-  ├─ 注入：stable / dynamic 上下文
-  └─ 图片：归一化、去重、embedding、召回
-
-数据层
-  ├─ MemoryStore / MemoryDomain / MemoryEntry
-  ├─ MemoryVersion / ConversationMemory
-  ├─ MemoryImage / MemoryExtractionPrompt
-  └─ pgvector：memory_vectors / image_vectors
+```text
+plugin/memory/
+  plugin.json
+  runtime/src/index.mts     → runtime/dist/index.mjs
+  client/src/index.ts       → client/dist/index.mjs
 ```
 
-## 2. 数据分层
+- **runtime** 拥有记忆数据、抽取、召回、注入、图片和 VFS provider。
+- **client** 只负责 UI：面板、卡片、agent 设置和共享对话框。
+- 宿主不实现记忆算法，只在 turn 的固定时点调用 hook。
 
-```
-User
- └─ MemoryStore
-     ├─ MemoryDomain
-     │   └─ MemoryEntry
-     │       ├─ MemoryVersion
-     │       ├─ ConversationMemory
-     │       └─ vector
-     └─ MemoryImage
-         └─ image vector
-```
+## Runtime 生命周期
 
-### store
+`apply(ctx, config)` 的主要步骤：
 
-- 一个用户可以有多个 store；
-- 默认 store 由 `isDefault` 标记；
-- 共享 store 通过 ACL 授权；
-- agent 可以选择自己的 store。
+1. 把插件配置扁平化为键值，写入 memory config
+2. 通过 `database` 插件获取 Mongo 和 PostgreSQL/pgvector 连接
+3. 等待数据库就绪（异步重试，不阻塞插件加载）
+4. 初始化向量表、模型和领域工具
+5. 注册 `memories.*` RPC
+6. 注册 kernel hooks
+7. dispose 时注销 hooks、停止抽取任务
 
-### domain
+数据库暂时不可用时插件仍会加载；后续请求会继续尝试初始化，而不是让 kernel 启动失败。
 
-- store 内的语境分区；
-- 每个 domain 有 `name`、`kind`、`description`；
-- 默认 domain 是新建记忆的兜底；
-- 一轮对话只读写 active domains。
+## Hook 入口
 
-### entry
+| hook | 用途 |
+|---|---|
+| `chat.beforeRun` | 中断上一轮抽取、计算 domain scope、召回记忆 |
+| `prompt.inject` | 生成 stable / dynamic 上下文 |
+| `chat.afterRun` | 异步调度记忆抽取 |
+| `conversation.deleted` | 清理该会话的 conversation-memory 关联 |
+| `allConversations.deleted` | 清理用户所有会话关联 |
+| `conversation.compacted` | 删除被压缩掉的消息对应的关联 |
+| `user.deleted` | 清理该用户的全部记忆、图片和关联 |
+| `image.ingest` | 图片入库、去重、向量化 |
+| `vfs.memory` | `/memory` 文件操作转发 |
 
-- `key` 是稳定标识；
-- `value` 是记忆正文；
-- `tags` 是召回线索；
-- `stable` 决定是否进入长期基线；
-- `locked` 阻止 LLM 改写。
+Hook 失败只记日志并返回 null，不应让对话主流程失败。
 
-## 3. 读路径
+## RPC
 
-```
-turn 开始
-  │
-  ├─ 解析 store / domain scope
-  │
-  ├─ stable 记忆 ──────────────► system 基线
-  │
-  ├─ recall
-  │   ├─ 向量召回
-  │   ├─ 标签召回
-  │   ├─ 词法召回
-  │   ├─ 重排
-  │   └─ 选择 ────────────────► dynamic 上下文
-  │
-  └─ 图片召回 ─────────────────► 图片块
-```
+浏览器和宿主 agent 通过 `memories.*` 读取/写入记忆：
 
-### stable 部分
+- `memories.list` / `create` / `update` / `delete`
+- `memories.domains*` / `stores*` / `versions*`
+- `memories.permissions*` / `preferences*`
+- `memory.vfs.provider`（内部 VFS 入口）
 
-- 只取 `stable: true`；
-- `injection: system` 进 stable 上下文；
-- `injection: additional` 进 dynamic 上下文；
-- stable 不进入 RAG，避免重复。
+完整列表见 [rpc.md](./rpc.md)。每个方法都带 `userId`/`role`，服务端不从参数信任调用者身份。
 
-### recall 部分
+## 数据边界
 
-- 只取 active domains；
-- 只取 ephemeral；
-- 排除本轮已注入的 key；
-- 输出最多 `MEMORY_RAG_LIMIT` 条。
+| 数据 | 存储 |
+|---|---|
+| store / domain / entry / version / conversation link | 插件 Mongo |
+| 图片 bytes、sha256、dHash、元数据 | 插件 Mongo |
+| 文本/图片向量 | PostgreSQL + pgvector |
+| 用户偏好、共享 ACL | 插件 Mongo + permissions |
+| 抽取提示词 | 插件 Mongo（`memoryextractionprompts`） |
 
-## 4. 写路径
+宿主只提供连接和认证上下文；memory 不直接暴露数据库给其他插件。
 
-写入有三种来源：
+## 模块
 
-```
-自动抽取
-手动编辑（面板 / VFS）
-图片 ingest
+```text
+runtime/src/
+  index.mts          入口、hook、RPC
+  backend/           领域服务：memory/store/domain/history/injection/images
+  db/                模型、方法、ACL、租户隔离
+  domain/            domain scope 与 domain tools
+  extraction/        抽取器、processor、工具、向量同步
+  recall/            向量/标签/词法/重排/衰减/MMR/图片召回
+  vfs/               /memory provider
 ```
 
-统一落到：
+| 层 | 职责 |
+|---|---|
+| backend | 面向 RPC/hook 的用例，组合 db 与算法 |
+| db | 唯一直接访问集合的层，所有查询带 userId/storeId/tenant |
+| extraction | 从对话生成记忆变更，异步、可中断 |
+| recall | 为当前 turn 排序和选择候选 |
+| vfs | 把记忆映射成文件路径和读写语义 |
+| client | React 组件、RPC 调用、词条和 slot 注册 |
 
-1. store / domain 解析；
-2. key/value 校验；
-3. 写 `memoryentries`；
-4. 写 `memoryversions`；
-5. 写 `conversationmemories`；
-6. 发变更事件，更新向量。
+## 生命周期不变量
 
-### 自动抽取
+- **用户隔离**：所有查询必须带 `userId`。
+- **store 边界**：召回、写入、VFS 都以 store 为单位。
+- **domain scope**：active domain 同时是读范围和写归属。
+- **stable 不进 RAG**：stable 走基线，ephemeral 走召回。
+- **抽取不阻塞回复**：`chat.afterRun` 只负责调度。
+- **写入先落库再同步向量**：向量失败不回滚记忆。
+- **共享只读**：有 VIEW 无 EDIT 的 store 可以召回，不能写。
 
-- 一轮回复结束后异步执行；
-- 从对话窗口提取事实；
-- 通过 `set_memory` / `append_memory` / `delete_memory` 写入；
-- 受 token/char limit 和 locked 保护。
+## 降级
 
-### 手动编辑
-
-- 面板直接改 entry；
-- VFS 把 `/memory/<domain>/<key>.md` 映射到同一套写入；
-- 两者都走 domain 校验和版本记录。
-
-### 图片
-
-- 上传或 `read_file` 时异步 ingest；
-- 归一化、去重后存 bytes；
-- 生成图片向量供召回；
-- 不影响文本记忆。
-
-## 5. 生命周期
-
-### 一轮对话
-
-1. 确定 store 和 active domains；
-2. 读取 stable 记忆，生成稳定上下文；
-3. 召回 ephemeral 记忆和图片；
-4. 组装 prompt；
-5. 模型回复；
-6. 回复落库后触发抽取；
-7. 抽取结果写回记忆，并更新消息卡片。
-
-### 记忆变更
-
-- 写入 → 版本 + link + 向量；
-- 删除 → 清版本/链接/向量；
-- stable 切换 → 进入或离开 RAG；
-- store 删除 → 清理该 store 的所有记忆和向量。
-
-## 6. 一致性与降级
-
-- 记忆写入成功但向量失败：记忆保留，召回暂时缺失；
-- embedding 服务不可用：召回降级到标签/词法；
-- reranker 不可用：使用向量/标签分数排序；
-- 抽取失败：不影响已完成的回复；
-- 只读共享 store：可以召回，不能写入。
+| 故障 | 行为 |
+|---|---|
+| embedding 不可用 | 跳过向量召回，使用标签/词法 |
+| reranker 不可用 | 保留向量/标签顺序 |
+| pgvector 不可用 | 词法召回仍可用 |
+| 图片工具不可用 | 图片仍入库，`embedded: false` |
+| 抽取 LLM 失败 | 回复已完成，不写半成品记忆 |
+| 数据库暂时不可用 | 插件加载不失败，后续请求重试 |

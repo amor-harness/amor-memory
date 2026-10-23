@@ -1,8 +1,6 @@
 # Prompt 注入
 
-## 1. 两类上下文
-
-`prompt.inject` 返回：
+注入在 `prompt.inject` hook 中完成，返回两个可独立使用的字符串：
 
 ```ts
 {
@@ -11,64 +9,69 @@
 }
 ```
 
-- **stableContext**：可缓存、跨 turn 稳定的系统基线；
-- **dynamicContext**：每轮可能变化的内容，放在消息尾部。
+- **stableContext**：跨 turn 稳定的系统基线，适合 prompt cache
+- **dynamicContext**：每轮变化的内容，放在消息尾部
 
-## 2. stableContext
+## stableContext
 
-由 `backend/injection.mjs` 构造：
+只包含 stable 记忆：
 
-1. 读取 active domains；
-2. 取 `stable: true` 且 `injection !== 'additional'` 的记忆；
-3. 用 `formatMemoryEntries` 渲染；
-4. 如果有 active domains，追加 domain kind legend。
-
-形状：
+1. 按 active domains 过滤
+2. 取 `stable: true` 且 `injection !== 'additional'`
+3. 按 domain 分组
+4. 渲染为：
 
 ```text
-# Memory domains
-...
-
 # Existing memory:
-1. ["key": "..."]. ["updated": "..."] ["value": "..."]
+1. ["key": "..."] ["updated": "..."] ["value": "..."]
 ```
 
-stableContext 不包含召回结果。
+如果有 active domains，会追加 domain kind legend。stableContext 不包含召回结果，也不重复注入 dynamic 内容。
 
-## 3. dynamicContext
+## dynamicContext
 
 按顺序拼接：
 
-1. `injection: 'additional'` 的 stable 记忆；
-2. active domains 块（`buildActiveDomainsBlock`）；
-3. 非默认 domain 的 stable 记忆，按 domain 分块；
-4. 本轮 recall 结果。
+1. `stable=true, injection=additional` 的记忆
+2. active domains 块
+3. 非默认 domain 的 stable 记忆，按 domain 分块
+4. 本轮召回结果
+5. 图片召回块
 
-如果没有任何内容，返回 `undefined`。
+没有任何内容时返回 `undefined`。
 
-## 4. Domain 分层
+## Domain 分层
 
-- 默认 domain 的记忆进入 system 基线；
-- 其他 active domain 的记忆进入 dynamic 块；
-- 未激活 domain 不读取；
-- 所有 domain 关闭时，scope 为 `enabled: false`，注入为空。
+- 默认 domain 的 stable 记忆进入 system 基线
+- 其他 active domain 的 stable 记忆进入 dynamic 尾部
+- 未激活 domain 不读取
+- 所有 domain 关闭时 scope 为 `enabled: false`，注入为空
 
-## 5. Recall 注入
+这保证“现实/项目”等不同语境不会互相污染系统基线。
 
-每轮召回结果格式化为文本后放进 dynamic 上下文。
+## 去重
 
-召回只取 ephemeral 记忆；stable 记忆不会重复进入 RAG。
+- `excludeKeys`：本轮已经注入的 key
+- `contextMemoryKeys`：当前上下文已经携带的 key
+- stable 与 recall 不重复
+- 同一 `##` 文档的 section 受槽位限制，避免整篇占满
 
-## 6. 去重
+## 格式化
 
-- `excludeKeys`：本轮已注入的 key；
-- `contextMemoryKeys`：当前上下文已经携带的 key；
-- stable 与 recall 不重复；
-- 同一 `##` 文档的 section 受槽位限制，避免整篇占满。
+- 记忆值可包含多段 `##` section；注入时按 section 选择
+- `@key` 行会被解析为关联摘要，附在 memory 行后
+- 时间按用户 timezone 格式化
+- 超过 token/字符预算时按优先级截断
 
-## 7. 缓存边界
+## 缓存边界
 
-- stableContext 可被 prompt cache 复用；
-- dynamicContext 每轮重新生成；
-- 时间、domain 激活状态、召回结果变化都会使 dynamic 部分变化；
-- stable 内容应保持精简，事件性细节放 ephemeral 记忆。
+- stableContext 可缓存；domain 激活状态、stable/locked 变更会使缓存失效
+- dynamicContext 每轮重新生成
+- 召回结果、时间、图片变化都只影响 dynamic
+- stable 内容应精简；事件性细节放 ephemeral
+
+## 失败
+
+- store 不可读 → 返回 `{ stableContext: undefined, dynamicContext: undefined }`
+- 数据库/召回失败 → 尽量保留 stable，dynamic 为空
+- 注入失败不阻断对话；错误只记日志

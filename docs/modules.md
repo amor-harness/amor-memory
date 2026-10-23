@@ -1,96 +1,75 @@
-# 模块构成
+# 模块参考
 
-## 1. 领域模块
+本页是目录级索引，具体行为见 architecture 和各专题文档。
 
-| 模块     | 职责                                             |
-| -------- | ------------------------------------------------ |
-| 记忆存储 | store、domain、entry、version、conversation link |
-| 抽取     | 从对话生成记忆变更                               |
-| 召回     | 为当前 turn 选择相关记忆                         |
-| 注入     | 把 stable/recall 结果放进 prompt                 |
-| VFS      | `/memory` 文件视图与 `EXTRACTION.md`             |
-| 图片     | 图片存储、去重、嵌入、召回                       |
-| 权限     | store 共享与读写权限                             |
-| UI       | 记忆面板、消息卡片、agent 设置                   |
-
-## 2. 目录
+## Runtime
 
 ```text
-plugin/memory/
-  runtime/
-    backend/      记忆 CRUD、store、domain、注入、图片
-    recall/       召回算法
-    extraction/   抽取、调度、工具、向量同步
-    domain/       domain runtime 与 domain tools
-    vfs/          /memory provider
-    db.mjs        数据连接与模型
-    db/           本地数据层（models/methods/ACL）
-  client/
-    src/          面板、卡片、设置页
-    dist/         浏览器 ESM bundle
-  docs/           本目录
+runtime/src/
+  index.mts          插件入口：hook、RPC、生命周期
+  backend/           记忆、store、domain、注入、图片、VFS 用例
+  db/                Mongo 模型、方法、ACL、租户隔离
+  domain/            domain scope 与 domain tools
+  extraction/        抽取器、processor、工具、向量同步
+  recall/            向量、标签、词法、重排、衰减、MMR
+  vfs/               /memory provider
 ```
 
-## 3. backend
+### backend
 
-| 文件                                       | 职责                         |
-| ------------------------------------------ | ---------------------------- |
-| `memories.mjs`                             | 权限、store 访问、记忆列表   |
-| `write.mjs`                                | create/update/delete         |
-| `stores.mjs`                               | store 创建、共享、清空、删除 |
-| `domains.mjs` / `domain-write.mjs`         | domain 查询与写入            |
-| `history.mjs`                              | 版本与恢复                   |
-| `conversation.mjs`                         | 会话关联                     |
-| `preferences.mjs`                          | 用户偏好                     |
-| `injection.mjs`                            | stable/dynamic 注入          |
-| `recall-full.mjs`                          | 完整召回入口                 |
-| `recall.mjs`                               | 向量召回阶段                 |
-| `store.mjs`                                | store 解析与格式化记忆       |
-| `vfs.mjs`                                  | VFS 基础操作                 |
-| `extraction-prompt.mjs`                    | `EXTRACTION.md` 存储         |
-| `images.mjs` / `image.mjs`                 | 图片 ingest 与读取           |
-| `tokens.mjs` / `embed.mjs` / `vectors.mjs` | token、embedding、pgvector   |
+| 文件 | 职责 |
+|---|---|
+| `memories.mts` | 可读/可写 store、记忆列表、ACL 过滤 |
+| `write.mts` | create/update/delete、容量与 locked 守卫 |
+| `stores.mts` | store 创建、共享、清空、删除 |
+| `domains.mts` / `domain-write.mts` | domain 查询与写入 |
+| `history.mts` | 版本列表与恢复 |
+| `conversation.mts` | conversation-memory 关联 |
+| `preferences.mts` | 用户记忆开关 |
+| `injection.mts` | stable/dynamic 上下文 |
+| `recall-full.mts` | 完整召回入口 |
+| `recall.mts` | 向量召回阶段 |
+| `store.mts` | store 解析与记忆格式化 |
+| `vfs.mts` | VFS 基础操作 |
+| `extraction-prompt.mts` | `EXTRACTION.md` 存储 |
+| `images.mts` / `image.mts` | 图片 ingest、读取、删除 |
+| `tokens.mts` / `embed.mts` / `vectors.mts` | token、embedding、pgvector |
 
-## 4. recall
+### recall
 
-| 文件                                     | 角色                 |
-| ---------------------------------------- | -------------------- |
-| `recall.mjs`                             | 候选合并、重排、选择 |
-| `lexical.mjs`                            | 词法索引             |
-| `tagVocabulary.mjs`                      | 标签词表             |
-| `reranker.mjs`                           | cross-encoder        |
-| `links.mjs`                              | `@记忆名` 关联       |
-| `vectorStore.mjs`                        | 文本向量             |
-| `imageRecall.mjs` / `imageStore.mjs`     | 图片向量             |
-| `embeddings.mjs` / `imageEmbeddings.mjs` | embedding 客户端     |
-| `transport.mjs`                          | HTTP 传输            |
+| 文件 | 角色 |
+|---|---|
+| `recall.mts` | 候选合并、重排、选择 |
+| `lexical.mts` | 倒排索引与日期展开 |
+| `tagVocabulary.mts` | 标签词表 |
+| `reranker.mts` | Jina rerank 客户端 |
+| `links.mts` | `@memory` 关联摘要 |
+| `vectorStore.mts` | 文本向量 |
+| `imageRecall.mts` / `imageStore.mts` | 图片向量 |
+| `embeddings.mts` / `imageEmbeddings.mts` | embedding 客户端 |
+| `transport.mts` | token/proxy transport |
 
-## 5. extraction
+### extraction
 
-| 文件              | 角色                |
-| ----------------- | ------------------- |
-| `index.mjs`       | 抽取器、工具、调度  |
-| `processor.mjs`   | 单次抽取的编排      |
-| `database.mjs`    | 记忆数据层适配      |
-| `vector-sync.mjs` | 记忆变更 → 向量同步 |
+| 文件 | 角色 |
+|---|---|
+| `index.mts` | 抽取器、工具、调度、prompt |
+| `processor.mts` | 单次抽取编排 |
+| `database.mts` | 记忆数据层适配 |
+| `vector-sync.mts` | 记忆变更 → 向量同步 |
 
-## 6. domain
+### client
 
-- `domain.mjs`：domain scope、domain runtime、domain tools
-- `register.mjs`：注册 domain 工具与 `memory.domain.scope`
+| 路径 | 职责 |
+|---|---|
+| `src/index.ts` | 激活、slot/panel 注册 |
+| `src/runtime.ts` | app-ui / host UI 适配 |
+| `src/data.ts` | RPC query/mutation |
+| `src/sdk.ts` | 客户端传输类型 |
+| `src/locales.ts` | 词条作用域 |
+| `src/components/` | 面板、列表、卡片、store/domain 对话框 |
+| `dist/index.mjs` | 浏览器 ESM bundle |
 
-## 7. vfs
+## 构建
 
-- `provider-impl.mjs`：`/memory` 路径语义、INDEX、domain 文件夹
-- `provider.mjs`：provider 包装、`EXTRACTION.md`
-
-## 8. client
-
-| 路径              | 职责              |
-| ----------------- | ----------------- |
-| `src/index.js`    | UI 插槽入口       |
-| `src/runtime.js`  | 前端 runtime      |
-| `src/data.js`     | 数据请求          |
-| `src/hooks.js`    | React Query hooks |
-| `src/components/` | 面板、卡片、设置  |
-| `dist/index.mjs`  | ESM bundle        |
+`runtime/src` 由 `tsc` 输出到 `runtime/dist`；`client/src` 由 esbuild 打成单文件 ESM。新增 runtime 文件时确认 tsconfig include 覆盖，否则构建成功但运行时缺模块。

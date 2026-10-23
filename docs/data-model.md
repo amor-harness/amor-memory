@@ -1,108 +1,139 @@
 # 数据模型
 
-memory 系统使用独立 Mongo 连接（`runtime/db.mjs`），模型只属于 memory。
+记忆数据由 memory 插件独占，使用插件 Mongo 连接。宿主不直接读写这些集合。
 
-## 集合
+```text
+User
+ └─ MemoryStore
+     ├─ MemoryDomain
+     │   └─ MemoryEntry
+     │       ├─ MemoryVersion
+     │       ├─ ConversationMemory
+     │       └─ text vector
+     └─ MemoryImage
+         └─ image vector
+```
 
-### `memorystores`
+## memorystores
 
-一个用户可拥有多个记忆库。
+| 字段 | 说明 |
+|---|---|
+| `userId` | 所有者 |
+| `name` | store 名称，`(userId, name)` 索引 |
+| `isDefault` | 默认 store |
+| `created_at` / `updated_at` | 时间 |
+| `tenantId` | 租户隔离 |
 
-| 字段                        | 说明     |
-| --------------------------- | -------- |
-| `userId`                    | 所有者   |
-| `name`                      | 展示名   |
-| `isDefault`                 | 默认库   |
-| `created_at` / `updated_at` | 时间     |
-| `tenantId`                  | 租户隔离 |
+默认 store 在用户第一次使用记忆时创建；共享 store 的数据仍归 owner，调用者通过 ACL 访问。
 
-### `memoryentries`
+## memorydomains
 
-一条记忆。
+| 字段 | 说明 |
+|---|---|
+| `userId` / `storeId` | 归属 |
+| `name` | domain 文件夹名，`(storeId, name)` 唯一 |
+| `kind` | `real` / `fictional` / `project` / `work` / `study` / `sandbox` 等 |
+| `description` | 一行说明 |
+| `isDefault` | 默认 domain，不可删除 |
+| `createdBy` | `user` / `agent` |
+| `tenantId` | 租户隔离 |
 
-| 字段         | 说明                            |
-| ------------ | ------------------------------- |
-| `userId`     | 所有者                          |
-| `storeId`    | 所属 store                      |
-| `domainId`   | 所属 domain                     |
-| `key`        | 稳定标识，通常 `[a-z0-9_]+`     |
-| `value`      | 记忆正文，可含 trailing `tags:` |
-| `tags`       | 物化标签                        |
-| `stable`     | 是否进入 stable 注入            |
-| `injection`  | `system` 或 `additional`        |
-| `locked`     | 锁定，LLM 写入守卫              |
-| `tokenCount` | token 用量                      |
-| `updated_at` | 排序/注入时间                   |
+domain 决定召回范围和写入归属；一轮对话只读写 active domains。
 
-### `memorydomains`
+## memoryentries
 
-store 内的语境分区。
+| 字段 | 说明 |
+|---|---|
+| `userId` / `storeId` / `domainId` | 归属 |
+| `key` | 稳定标识，`^[a-z0-9_]+$`，最长 1000 字符 |
+| `value` | 正文，可带末尾 `tags:` / `@key` 关联 |
+| `tags` | 写入时物化的标签，供召回 |
+| `tokenCount` | token 估计 |
+| `stable` | 进入 stable 基线 |
+| `injection` | `system` 或 `additional` |
+| `locked` | 阻止 LLM 改写 |
+| `updated_at` | 排序和衰减依据 |
+| `tenantId` | 租户隔离 |
 
-| 字段                 | 说明                                                               |
-| -------------------- | ------------------------------------------------------------------ |
-| `userId` / `storeId` | 归属                                                               |
-| `name`               | 文件夹名                                                           |
-| `kind`               | `real` / `fictional` / `project` / `work` / `study` / `sandbox` 等 |
-| `description`        | 一行说明                                                           |
-| `isDefault`          | 默认 domain，不可删除                                              |
-| `createdBy`          | `user` / `agent`                                                   |
+索引：`(storeId, key)`、`(storeId, domainId)`。
 
-### `memoryversions`
+`stable` 与 `injection` 的组合：
 
-每次写入的旧值快照，用于恢复。
+- `stable=true, injection=system` → system 基线
+- `stable=true, injection=additional` → dynamic 尾部
+- `stable=false` → 每轮召回
 
-### `conversationmemories`
+## memoryversions
+
+每次成功写入前的快照：
+
+| 字段 | 说明 |
+|---|---|
+| `memoryId` | 对应 entry |
+| `value` | 旧值 |
+| `key` / `domainId` | 旧位置 |
+| `createdAt` | 版本时间 |
+
+按 `(memoryId, createdAt)` 倒序读取；恢复版本会重新写入 entry 并生成新版本。
+
+## conversationmemories
 
 记忆与会话的关联：
 
-- `source: extracted`：本轮抽取写入；
-- `source: recalled`：只被召回；
-- 用于“排除本会话自己刚写的记忆”。
+| 字段 | 说明 |
+|---|---|
+| `userId` / `conversationId` / `key` | 唯一 |
+| `source` | `extracted` 或 `recalled` |
+| `messageId` | 触发写入/召回的消息 |
+| `createdAt` | 时间 |
 
-### `memoryimages`
+用途：
 
-图片记忆：
+- 排除“本会话刚刚写入”的记忆，避免立刻又召回；
+- 会话删除/压缩时清理关联；
+- 前端显示本轮 recalled 列表。
 
-- sha256、dhash、mime、宽高、字节；
-- 原始 bytes；
-- `embedded` 标记；
-- `origin`（conversation / message / file / tool）。
+## memoryimages
 
-### `memoryimagecounters`
+| 字段 | 说明 |
+|---|---|
+| `userId` / `storeId` | 归属 |
+| `sha256` | 内容哈希，`(userId, storeId, sha256)` 唯一 |
+| `dhash` | 64 位 dHash，近重复扫描 |
+| `id` | 每用户递增编号，用于 VFS 路径 |
+| `mime` / `width` / `height` / `bytes` | 元数据 |
+| `data` | 原图 bytes |
+| `source` | `attachment` / `tool` |
+| `origin` | conversation / message / file / tool |
+| `embedded` | 是否已有向量 |
+| `tenantId` | 租户隔离 |
 
-每用户图片编号序列。
+## memoryextractionprompts
 
-### `memoryextractionprompts`
+每用户自定义抽取提示词，对应 `/memory/EXTRACTION.md`：
 
-每用户抽取提示词，对应 VFS `/memory/EXTRACTION.md`：
+- `userId` 唯一；
+- `instructions` 为空表示回退到 agent 或默认提示词；
+- 写入/删除通过 VFS 或 RPC，不直接暴露给模型。
 
-```js
-{
-  (userId, instructions, updated_at, tenantId);
-}
-```
+## 向量表
 
-`userId` 唯一。为空表示使用 agent instructions 或代码默认提示词。
+- `memory_vectors`：记忆正文/section 的 embedding + 元数据
+- `image_vectors`：图片 embedding
 
-## 索引要点
-
-- `memoryentries`: `(storeId, key)`, `(storeId, domainId)`
-- `memorydomains`: `(storeId, name)` 唯一
-- `memoryversions`: `(memoryId, createdAt)` 倒序
-- `conversationmemories`: `(userId, conversationId, key)` 唯一
-- `memoryimages`: `(userId, storeId, sha256)` 唯一；`(userId, id)` 稀疏唯一；`(userId, dhash)`
-- `memoryextractionprompts`: `userId` 唯一
+维度由 `MEMORY_EMBED_DIM` / `MEMORY_IMAGE_DIM` 决定，默认 1024。表在首次启动时自动创建；换模型后必须重建并重新生成向量。
 
 ## 隔离规则
 
-1. **用户隔离**：所有查询都带 `userId`。
+1. **用户隔离**：所有查询带 `userId`。
 2. **store 隔离**：召回、写入、VFS 都以 store 为边界。
-3. **domain 隔离**：active domain scope 同时是读范围和写范围。
-4. **共享 store**：owner 的 `userId` 持有数据；调用者通过 ACL 读写，`canWrite` 由 EDIT bit 决定。
-5. **租户隔离**：模型带 `tenantId`，由 tenant isolation 逻辑控制。
+3. **domain 隔离**：active domain 同时是读范围和写范围。
+4. **共享 store**：ACL 决定 VIEW/EDIT；数据仍归 owner。
+5. **租户隔离**：模型带 `tenantId`，查询由 tenant isolation 包装。
 
-## 数据层边界
+## 删除语义
 
-- memory models / methods / ACL 全部由 memory 系统维护；
-- 数据访问只经过 memory 的 `db` 层；
-- 记忆能力通过系统接口使用，不直接访问 memory 集合。
+- 删除 entry → 删除版本、会话关联、文本向量。
+- 删除 domain → 先处理其记忆，不能留下悬挂 entry。
+- 删除 store → 清理全部 entry/version/link/image/vector。
+- 删除用户 → 清理所有 store、entry、image 和会话关联。
