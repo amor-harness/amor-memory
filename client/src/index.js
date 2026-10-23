@@ -20,7 +20,7 @@ export default function activate(api) {
   if (i18n == null) {
     throw new Error('memory plugin requires the i18n service');
   }
-  for (const name of ['GenericGrantAccessDialog', 'useAuthContext', 'useHasAccess', 'useToastContext']) {
+  for (const name of ['GenericGrantAccessDialog', 'useAuthContext', 'useExpandCollapse', 'useHasAccess', 'useToastContext']) {
     if (appUi?.[name] == null) {
       throw new Error(`memory plugin requires app-ui.${name}`);
     }

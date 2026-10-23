@@ -353,6 +353,22 @@ function useHasAccess(options) {
   const check = state.appUi?.useHasAccess;
   return typeof check === "function" ? check(options) === true : true;
 }
+function useExpandCollapse(isExpanded) {
+  const host = state.appUi?.useExpandCollapse;
+  if (typeof host === "function") {
+    return host(isExpanded);
+  }
+  const ref = state.React.useRef(null);
+  const style = state.React.useMemo(
+    () => ({
+      display: "grid",
+      gridTemplateRows: isExpanded ? "1fr" : "0fr",
+      transition: "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+    }),
+    [isExpanded]
+  );
+  return { style, ref };
+}
 function useQuery(options) {
   const host = state.appUi?.useQuery;
   if (typeof host === "function") {
@@ -3167,18 +3183,6 @@ function MemoryInfo({ memoryArtifacts }) {
 
 // client/src/hooks.js
 var BOUNDED_BODY_CLASS = "max-h-[40dvh] overflow-x-hidden overflow-y-auto [contain:paint]";
-function useExpandCollapse(isExpanded) {
-  const ref = useRef(null);
-  const style = useMemo(
-    () => ({
-      display: "grid",
-      gridTemplateRows: isExpanded ? "1fr" : "0fr",
-      transition: "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-    }),
-    [isExpanded]
-  );
-  return { style, ref };
-}
 function useBoundedBody() {
   const bodyRef = useRef(null);
   return { bodyRef, bodyStyle: void 0, onScroll: () => {
@@ -3304,7 +3308,7 @@ function activate(api) {
   if (i18n == null) {
     throw new Error("memory plugin requires the i18n service");
   }
-  for (const name of ["GenericGrantAccessDialog", "useAuthContext", "useHasAccess", "useToastContext"]) {
+  for (const name of ["GenericGrantAccessDialog", "useAuthContext", "useExpandCollapse", "useHasAccess", "useToastContext"]) {
     if (appUi?.[name] == null) {
       throw new Error(`memory plugin requires app-ui.${name}`);
     }

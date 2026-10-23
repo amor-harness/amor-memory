@@ -189,6 +189,23 @@ export function useHasAccess(options) {
   return typeof check === 'function' ? check(options) === true : true;
 }
 
+export function useExpandCollapse(isExpanded) {
+  const host = state.appUi?.useExpandCollapse;
+  if (typeof host === 'function') {
+    return host(isExpanded);
+  }
+  const ref = state.React.useRef(null);
+  const style = state.React.useMemo(
+    () => ({
+      display: 'grid',
+      gridTemplateRows: isExpanded ? '1fr' : '0fr',
+      transition: 'grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+    }),
+    [isExpanded],
+  );
+  return { style, ref };
+}
+
 export function useQuery(options) {
   const host = state.appUi?.useQuery;
   if (typeof host === 'function') {
