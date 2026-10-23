@@ -1,11 +1,12 @@
 import { h, Fragment } from '../runtime.js';
 import { useState, useRef, useMemo, useLayoutEffect } from '../runtime.js';
-const Tools = { memory: 'memory' };
+const Tools = { memory: 'memory' } as const;
 import MemoryInfo from './MemoryInfo.tsx';
 import useBoundedBody, { BOUNDED_BODY_CLASS } from '../hooks.js';
 import { useExpandCollapse } from '../hooks.js';
 import { useLocalize } from '../runtime.js';
 import { cn } from '../utils.js';
+import type { MemoryArtifact, TAttachment } from '../sdk.js';
 
 /** Layout-gate predicate for callers that arrange around this component
  * (e.g. the thinking-dot nudge). Must stay in agreement with the memo's
@@ -38,10 +39,11 @@ export default function MemoryArtifacts({ attachments }: { attachments?: TAttach
     }
 
     for (const attachment of attachments) {
-      if (attachment?.[Tools.memory] != null) {
-        result.push(attachment[Tools.memory]);
+      const artifact = attachment?.memory;
+      if (artifact != null) {
+        result.push(artifact);
 
-        if (!hasErrors && attachment[Tools.memory].type === 'error') {
+        if (!hasErrors && artifact.type === 'error') {
           hasErrors = true;
         }
       }

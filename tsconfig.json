@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "runtime/src",
+    "outDir": "runtime/dist",
+    "strict": true,
+    "noImplicitAny": true,
+    "allowJs": false
+  },
+  "include": ["runtime/src/**/*.mts", "../../packages/plugin-api/src/cordis.d.ts"],
+  "exclude": ["runtime/dist"]
+}

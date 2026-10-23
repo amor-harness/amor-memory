@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as extraction from '../extraction/index.mjs';
+import * as extraction from '../dist/extraction/index.mjs';
 
 test('the original extraction module compiles and exposes its full surface', () => {
   for (const name of [

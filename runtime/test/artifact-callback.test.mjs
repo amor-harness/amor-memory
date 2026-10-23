@@ -11,8 +11,8 @@ let extractionMethods;
 before(async () => {
   server = await MongoMemoryServer.create();
   process.env.MONGO_URI = server.getUri();
-  ({ extractionMethods } = await import('../extraction/database.mjs'));
-  memory = await import('../extraction/index.mjs');
+  ({ extractionMethods } = await import('../dist/extraction/database.mjs'));
+  memory = await import('../dist/extraction/index.mjs');
 });
 
 after(async () => {

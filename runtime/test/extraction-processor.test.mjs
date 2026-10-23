@@ -9,11 +9,11 @@ let processor;
 before(async () => {
   server = await MongoMemoryServer.create();
   process.env.MONGO_URI = server.getUri();
-  const { extractionMethods } = await import('../extraction/database.mjs');
+  const { extractionMethods } = await import('../dist/extraction/database.mjs');
   const methods = await extractionMethods();
-  const memory = await import('../extraction/index.mjs');
+  const memory = await import('../dist/extraction/index.mjs');
   const userId = new mongoose.Types.ObjectId();
-  const { models } = await import('../db.mjs');
+  const { models } = await import('../dist/db.mjs');
   const db = await models();
   await db.MemoryEntry.create({
     userId,

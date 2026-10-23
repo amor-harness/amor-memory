@@ -16,15 +16,26 @@ import {
 import { makeIcon } from '../runtime.js';
 import { useDeleteMemoryImageMutation, useDeleteMemoryMutation } from '../data.js';
 import MemoryEditDialog from './MemoryEditDialog.tsx';
+import type { TUserMemory } from '../sdk.js';
 
 const Pencil = makeIcon('pencil');
 
-export default function MemoryCardActions({ memory, storeId, readOnly = false }) {
+interface MemoryCardActionsProps {
+  memory: TUserMemory;
+  storeId?: string;
+  readOnly?: boolean;
+}
+
+export default function MemoryCardActions({
+  memory,
+  storeId,
+  readOnly = false,
+}: MemoryCardActionsProps) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const triggerRef = useRef(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const isImage = memory.kind === 'image';
 
   const { mutate: deleteMemory, isLoading: isDeleting } = useDeleteMemoryMutation();
@@ -43,7 +54,7 @@ export default function MemoryCardActions({ memory, storeId, readOnly = false })
       showToast({ message: localize('com_ui_deleted'), status: 'success' });
       setDeleteOpen(false);
     };
-    const onError = (error) => {
+    const onError = (error: Error) => {
       let message = localize('com_ui_error');
       if (error?.message?.includes('stable')) {
         message = localize('com_ui_memory_stable_guard');

@@ -56,21 +56,24 @@ export default function MemoryEditDialog({
     onError: (error: Error) => {
       let errorMessage = localize('com_ui_error');
 
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as any;
-        if (axiosError.response?.data?.error) {
-          errorMessage = axiosError.response.data.error;
+      if (typeof error === 'object' && 'response' in error) {
+        const failure = error as Error & {
+          response?: { status?: number; data?: { error?: string } };
+        };
+        const responseMessage = failure.response?.data?.error;
+        if (responseMessage) {
+          errorMessage = responseMessage;
 
           // Check for duplicate key error
-          if (axiosError.response?.status === 409 || errorMessage.includes('already exists')) {
+          if (failure.response?.status === 409 || responseMessage.includes('already exists')) {
             errorMessage = localize('com_ui_memory_key_exists');
           }
           // Check for key validation error (lowercase and underscores only)
-          else if (errorMessage.includes('lowercase letters, numbers, and underscores')) {
+          else if (responseMessage.includes('lowercase letters, numbers, and underscores')) {
             errorMessage = localize('com_ui_memory_key_validation');
           }
           // Stable-memory protections (delete/rename guard) surfaced as a hint
-          else if (errorMessage.includes('stable')) {
+          else if (responseMessage.includes('stable')) {
             errorMessage = localize('com_ui_memory_stable_guard');
           }
         }

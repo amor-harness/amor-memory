@@ -52,7 +52,11 @@ plugin/database/
 
 plugin/memory/
   plugin.json
-  runtime/
+  runtime/src/
+  runtime/test/
+  runtime/dist/
+  client/src/
+  client/test/
   client/dist/
   config.json
   docs/
@@ -63,7 +67,7 @@ plugin/memory/
 ```json
 {
   "client": { "entry": "./client/dist/index.mjs" },
-  "runtime": { "entry": "./runtime/index.mjs" }
+  "runtime": { "entry": "./runtime/dist/index.mjs" }
 }
 ```
 

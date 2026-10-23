@@ -9,7 +9,7 @@ let methods;
 before(async () => {
   server = await MongoMemoryServer.create();
   process.env.MONGO_URI = server.getUri();
-  const { extractionMethods } = await import('../extraction/database.mjs');
+  const { extractionMethods } = await import('../dist/extraction/database.mjs');
   methods = await extractionMethods();
 });
 

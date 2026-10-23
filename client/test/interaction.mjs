@@ -29,8 +29,7 @@ ui.OGDialog = ({ children }) => React.createElement(React.Fragment, null, childr
 ui.OGDialogTrigger = ({ children }) => children;
 ui.OGDialogTemplate = () => null;
 ui.OGDialogContent = ({ children }) => React.createElement('div', null, children);
-ui.VirtualList = ({ items, renderItem }) =>
-  React.createElement('div', null, items.map(renderItem));
+ui.VirtualList = ({ items, renderItem }) => React.createElement('div', null, items.map(renderItem));
 ui.Button = ({ children, ...props }) => React.createElement('button', props, children);
 ui.Label = ({ children, ...props }) => React.createElement('span', props, children);
 ui.Input = (props) => React.createElement('input', props);
@@ -86,7 +85,9 @@ const api = {
       };
     }
     if (method === 'memories.domains') {
-      return { domains: [{ id: 'd1', name: 'Default', kind: 'real', isDefault: true, memoryCount: 1 }] };
+      return {
+        domains: [{ id: 'd1', name: 'Default', kind: 'real', isDefault: true, memoryCount: 1 }],
+      };
     }
     return {};
   },

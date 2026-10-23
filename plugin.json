@@ -11,24 +11,11 @@
   "homepage": "https://github.com/amor-harness/amor-memory",
   "repository": "https://github.com/amor-harness/amor-memory",
   "license": "MIT",
-  "keywords": [
-    "amor",
-    "memory",
-    "agent",
-    "rag",
-    "vfs",
-    "pgvector",
-    "cordis"
-  ],
-  "requires": [
-    "agent-runtime",
-    "database",
-    "permissions"
-  ],
+  "keywords": ["amor", "memory", "agent", "rag", "vfs", "pgvector", "cordis"],
   "client": {
     "entry": "./client/dist/index.mjs"
   },
   "runtime": {
-    "entry": "./runtime/index.mjs"
+    "entry": "./runtime/dist/index.mjs"
   }
 }

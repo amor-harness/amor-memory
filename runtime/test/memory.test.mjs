@@ -17,20 +17,20 @@ let storeId;
 before(async () => {
   memoryServer = await MongoMemoryServer.create();
   process.env.MONGO_URI = memoryServer.getUri();
-  const db = await import('../db.mjs');
+  const db = await import('../dist/db.mjs');
   models = await db.models();
   connection = await db.connectDb();
   backend = {
-    ...(await import('../backend/write.mjs')),
-    ...(await import('../backend/memories.mjs')),
-    ...(await import('../backend/domains.mjs')),
-    ...(await import('../backend/stores.mjs')),
-    ...(await import('../backend/domain-write.mjs')),
-    ...(await import('../backend/restore.mjs')),
-    ...(await import('../backend/image.mjs')),
-    ...(await import('../backend/history.mjs')),
-    ...(await import('../backend/preferences.mjs')),
-    ...(await import('../backend/injection.mjs')),
+    ...(await import('../dist/backend/write.mjs')),
+    ...(await import('../dist/backend/memories.mjs')),
+    ...(await import('../dist/backend/domains.mjs')),
+    ...(await import('../dist/backend/stores.mjs')),
+    ...(await import('../dist/backend/domain-write.mjs')),
+    ...(await import('../dist/backend/restore.mjs')),
+    ...(await import('../dist/backend/image.mjs')),
+    ...(await import('../dist/backend/history.mjs')),
+    ...(await import('../dist/backend/preferences.mjs')),
+    ...(await import('../dist/backend/injection.mjs')),
   };
   await connection.collection('users').insertOne({
     _id: new mongoose.Types.ObjectId(USER_ID),
@@ -108,9 +108,12 @@ test('deletes the entry and its history', async () => {
   assert.equal(await models.MemoryVersion.countDocuments({ storeId }), 0);
 });
 
-
 test('creates, renames and clears a store through the plugin backend', async () => {
-  const created = await backend.createStore({ userId: USER_ID, role: 'USER', name: 'Second store' });
+  const created = await backend.createStore({
+    userId: USER_ID,
+    role: 'USER',
+    name: 'Second store',
+  });
   assert.equal(created.ok, true);
   const secondId = created.store.id;
 
@@ -189,7 +192,6 @@ test('creates, updates and force-deletes a domain with its memories', async () =
   assert.equal(forced.ok, true);
 });
 
-
 test('restores a recorded version', async () => {
   const store = await backend.createStore({ userId: USER_ID, role: 'USER', name: 'Restore store' });
   const storeId = store.store.id;
@@ -247,7 +249,6 @@ test('serves and deletes an image from the plugin store', async () => {
   assert.equal(await models.MemoryImage.countDocuments({ sha256 }), 0);
 });
 
-
 test('reads and writes the user memory preference', async () => {
   const initial = await backend.getPreferences({ userId: USER_ID, role: 'USER' });
   assert.equal(initial.memories, true);
@@ -261,7 +262,6 @@ test('reads and writes the user memory preference', async () => {
   assert.equal(after.memories, false);
 });
 
-
 test('lists owned stores with counts', async () => {
   const listed = await backend.listStores({ userId: USER_ID, role: 'USER' });
   const names = listed.stores.map((store) => store.name);
@@ -270,7 +270,6 @@ test('lists owned stores with counts', async () => {
   assert.equal(testStore.canWrite, true);
   assert.equal(testStore.isOwner, true);
 });
-
 
 test('builds stable context and dynamic blocks for injection', async () => {
   const store = await backend.createStore({ userId: USER_ID, role: 'USER', name: 'Inject store' });

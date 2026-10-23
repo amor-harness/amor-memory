@@ -79,7 +79,13 @@ for (let i = 0; i < 8; i += 1) {
   await new Promise((resolve) => setTimeout(resolve, 10));
 }
 const text = rootNode.textContent;
-for (const marker of ['com_ui_memory_scope_title', 'Default', 'Island', 'alpha', 'com_ui_memory_stable']) {
+for (const marker of [
+  'com_ui_memory_scope_title',
+  'Default',
+  'Island',
+  'alpha',
+  'com_ui_memory_stable',
+]) {
   assert.ok(text.includes(marker), `scope dialog missing ${marker}: ${text.slice(0, 200)}`);
 }
 console.log('memory plugin scope dialog test: ok');

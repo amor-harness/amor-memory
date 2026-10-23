@@ -1,6 +1,6 @@
 # @amor-harness/memory
 
-**English** · [中文](./README.md)
+[中文](./README.md) · **English**
 
 The memory system plugin for Amor.
 

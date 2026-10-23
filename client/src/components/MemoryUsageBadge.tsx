@@ -1,7 +1,7 @@
 import { h, Fragment } from '../runtime.js';
 import { TooltipAnchor, cn, useLocalize } from '../runtime.js';
 
-const getStatusColor = (pct) => {
+const getStatusColor = (pct: number): string => {
   if (pct > 90) {
     return 'bg-status-error-subtle text-status-error';
   }
@@ -11,17 +11,25 @@ const getStatusColor = (pct) => {
   return 'bg-status-success-subtle text-status-success';
 };
 
+interface MemoryUsageBadgeProps {
+  percentage: number;
+  tokenLimit: number | null;
+  totalTokens?: number;
+  tooltipCurrent?: number;
+  tooltipMax?: number;
+}
+
 export default function MemoryUsageBadge({
   percentage,
   tokenLimit,
   totalTokens,
   tooltipCurrent,
   tooltipMax,
-}) {
+}: MemoryUsageBadgeProps) {
   const localize = useLocalize();
   const tokenLabel = localize('com_ui_tokens');
   const current = tooltipCurrent ?? totalTokens;
-  const max = tooltipMax ?? tokenLimit;
+  const max = tooltipMax ?? tokenLimit ?? 0;
   const tooltipText =
     current !== undefined
       ? `${current.toLocaleString()} / ${max.toLocaleString()} ${tokenLabel}`

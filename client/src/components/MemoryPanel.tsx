@@ -17,7 +17,7 @@ import {
   ControlCombobox,
   useToastContext,
 } from '../runtime.js';
-import type { TUserMemory, TMemoryStore, TMemoryDomain } from '../sdk.js';
+import type { OptionWithIcon, TMemoryDomain, TMemoryStore, TUserMemory } from '../sdk.js';
 
 import {
   useUpdateMemoryPreferencesMutation,
@@ -164,7 +164,7 @@ export default function MemoryPanel() {
 
   /** A card's domain chip needs the kind, which the memory row does not carry. */
   const domainsById = useMemo(
-    () => new Map(domains.map((domain) => [domain.id, domain])),
+    () => new Map(domains.map((domain): [string, TMemoryDomain] => [domain.id, domain])),
     [domains],
   );
 

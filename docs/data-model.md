@@ -8,44 +8,44 @@ memory 系统使用独立 Mongo 连接（`runtime/db.mjs`），模型只属于 m
 
 一个用户可拥有多个记忆库。
 
-| 字段 | 说明 |
-|---|---|
-| `userId` | 所有者 |
-| `name` | 展示名 |
-| `isDefault` | 默认库 |
-| `created_at` / `updated_at` | 时间 |
-| `tenantId` | 租户隔离 |
+| 字段                        | 说明     |
+| --------------------------- | -------- |
+| `userId`                    | 所有者   |
+| `name`                      | 展示名   |
+| `isDefault`                 | 默认库   |
+| `created_at` / `updated_at` | 时间     |
+| `tenantId`                  | 租户隔离 |
 
 ### `memoryentries`
 
 一条记忆。
 
-| 字段 | 说明 |
-|---|---|
-| `userId` | 所有者 |
-| `storeId` | 所属 store |
-| `domainId` | 所属 domain |
-| `key` | 稳定标识，通常 `[a-z0-9_]+` |
-| `value` | 记忆正文，可含 trailing `tags:` |
-| `tags` | 物化标签 |
-| `stable` | 是否进入 stable 注入 |
-| `injection` | `system` 或 `additional` |
-| `locked` | 锁定，LLM 写入守卫 |
-| `tokenCount` | token 用量 |
-| `updated_at` | 排序/注入时间 |
+| 字段         | 说明                            |
+| ------------ | ------------------------------- |
+| `userId`     | 所有者                          |
+| `storeId`    | 所属 store                      |
+| `domainId`   | 所属 domain                     |
+| `key`        | 稳定标识，通常 `[a-z0-9_]+`     |
+| `value`      | 记忆正文，可含 trailing `tags:` |
+| `tags`       | 物化标签                        |
+| `stable`     | 是否进入 stable 注入            |
+| `injection`  | `system` 或 `additional`        |
+| `locked`     | 锁定，LLM 写入守卫              |
+| `tokenCount` | token 用量                      |
+| `updated_at` | 排序/注入时间                   |
 
 ### `memorydomains`
 
 store 内的语境分区。
 
-| 字段 | 说明 |
-|---|---|
-| `userId` / `storeId` | 归属 |
-| `name` | 文件夹名 |
-| `kind` | `real` / `fictional` / `project` / `work` / `study` / `sandbox` 等 |
-| `description` | 一行说明 |
-| `isDefault` | 默认 domain，不可删除 |
-| `createdBy` | `user` / `agent` |
+| 字段                 | 说明                                                               |
+| -------------------- | ------------------------------------------------------------------ |
+| `userId` / `storeId` | 归属                                                               |
+| `name`               | 文件夹名                                                           |
+| `kind`               | `real` / `fictional` / `project` / `work` / `study` / `sandbox` 等 |
+| `description`        | 一行说明                                                           |
+| `isDefault`          | 默认 domain，不可删除                                              |
+| `createdBy`          | `user` / `agent`                                                   |
 
 ### `memoryversions`
 
@@ -77,7 +77,9 @@ store 内的语境分区。
 每用户抽取提示词，对应 VFS `/memory/EXTRACTION.md`：
 
 ```js
-{ userId, instructions, updated_at, tenantId }
+{
+  (userId, instructions, updated_at, tenantId);
+}
 ```
 
 `userId` 唯一。为空表示使用 agent instructions 或代码默认提示词。

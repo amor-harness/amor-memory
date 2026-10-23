@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createMemoryProvider, MEMORY_INDEX_FILE } from '../vfs/provider-impl.mjs';
+import { createMemoryProvider, MEMORY_INDEX_FILE } from '../dist/vfs/provider-impl.mjs';
 
 function fixture() {
   const rows = [
@@ -25,14 +25,22 @@ function fixture() {
       return { ok: true };
     },
   });
-  return { provider, rows, calls, ctx: { req: { user: { id: 'u1' }, body: {} }, memoryStoreId: 's1' } };
+  return {
+    provider,
+    rows,
+    calls,
+    ctx: { req: { user: { id: 'u1' }, body: {} }, memoryStoreId: 's1' },
+  };
 }
 
 test('memory provider lists the index, domains and entries', async () => {
   const { provider, ctx } = fixture();
   const listing = await provider.list('', ctx);
   assert.ok(listing);
-  assert.deepEqual(listing.entries.map((entry) => entry.name).sort(), ['Default', MEMORY_INDEX_FILE]);
+  assert.deepEqual(listing.entries.map((entry) => entry.name).sort(), [
+    'Default',
+    MEMORY_INDEX_FILE,
+  ]);
 });
 
 test('memory provider reads and writes a memory file', async () => {

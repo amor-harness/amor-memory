@@ -1,207 +1,227 @@
-// client/src/locales.js
+// client/src/locales.ts
+var en = {
+  navTitle: "Memories",
+  title: "Memories",
+  refresh: "Refresh",
+  search: "Search memories",
+  loading: "Loading\u2026",
+  empty: "No memories yet.",
+  "empty.title": "No memories yet",
+  "empty.body": "Memories you add will show up here.",
+  "empty.filtered": "No memories match your search.",
+  delete: "Delete",
+  deleteConfirm: 'Delete "{{key}}"?',
+  edit: "Edit",
+  save: "Save",
+  cancel: "Cancel",
+  usage: "{{shown}} shown \xB7 {{total}} tokens",
+  "access.denied": "You do not have permission to read memories.",
+  "card.stable": "Stable",
+  "card.locked": "Locked",
+  "card.image": "Image",
+  "card.imageUnavailable": "Image unavailable",
+  "card.token": "token",
+  "card.tokens": "tokens",
+  "domainKind.real": "Real",
+  "domainKind.fictional": "Fictional",
+  "domainKind.project": "Project",
+  "domainKind.sandbox": "Sandbox",
+  "domainKind.study": "Study",
+  "domainKind.work": "Work",
+  "domains.button": "Domains",
+  "domains.all": "All domains",
+  "domains.search": "Search domains",
+  "domains.name": "Domain name",
+  "domains.add": "Add domain",
+  "domains.deleteConfirm": 'Delete domain "{{name}}"? Its memories will be removed.',
+  "stores.new": "New store",
+  "stores.add": "Add",
+  "stores.back": "Back",
+  "stores.search": "Search memory stores",
+  "stores.default": "Default",
+  "stores.editor": "Editor",
+  "stores.viewer": "Viewer",
+  "stores.memories": "{{count}} memories",
+  "stores.updated": "Updated {{date}}",
+  "stores.rename": "Rename store",
+  "stores.renameTitle": "Rename memory store",
+  "stores.renamePrompt": 'New name for "{{name}}"',
+  "stores.deleteTitle": "Delete memory store",
+  "stores.deleteConfirm": 'Delete store "{{name}}" and all its memories?',
+  "stores.clear": "Clear memory store",
+  "stores.clearTitle": "Clear memory store",
+  "stores.clearConfirm": 'Delete every memory in "{{name}}"? This cannot be undone.',
+  "delete.title": "Delete memory",
+  "delete.imageTitle": "Delete image memory",
+  "delete.confirm": 'Delete "{{key}}"?',
+  "delete.imageConfirm": "Delete this image memory?",
+  "create.title": "Create memory",
+  "edit.title": "Edit memory",
+  "field.key": "Key",
+  "field.value": "Value",
+  "field.domain": "Domain",
+  "field.stable": "Stable",
+  "field.stableInfo": "Stable memories ride the system baseline instead of per-turn recall.",
+  "field.locked": "Locked",
+  "field.lockedInfo": "Hide from the extractor and refuse every model-written change.",
+  "field.injection": "Injection",
+  "field.injection.system": "System prompt",
+  "field.injection.additional": "Additional context",
+  history: "History",
+  "history.empty": "No history yet.",
+  "image.title": "Memory image",
+  "preferences.use": "Use memory",
+  "preferences.info": "Let agents read and write your saved memories.",
+  "settings.useMemory": "Use memory",
+  "settings.useMemoryInfo": "When enabled, the agent reads your memories for context and automatically extracts memories from your conversations. Disable to keep your memories out of this agent\u2019s chats.",
+  "settings.store": "Memory store",
+  "settings.selectStore": "Select a memory store",
+  "settings.searchStores": "Search memory stores",
+  "settings.clear": "Clear",
+  "settings.storeRequired": "An agent without a memory store has memory disabled.",
+  "settings.domains": "Memory domains",
+  "settings.domainDefaultOnly": "Default domain only",
+  "settings.domainAgentsHint": "New chats with this agent start with these domains active. Memories are only written into and recalled from the active domains.",
+  "settings.domainNotReal": "not real",
+  "settings.storeDefault": "Default",
+  "cards.recalled": "Recalled saved memory",
+  "cards.updated": "Updated saved memory",
+  "cards.error": "Memory error",
+  "cards.recalledItems": "Recalled memories",
+  "cards.updatedItems": "Updated memories",
+  "cards.deletedItems": "Deleted memories",
+  "header.scope": "Memory scope",
+  "header.domains": "Memory domains",
+  "header.created": "Written by this chat",
+  "header.recalled": "Recalled in this chat",
+  "header.empty": "No memories in this chat yet.",
+  "header.close": "Close"
+};
+var zhHans = {
+  navTitle: "\u8BB0\u5FC6",
+  title: "\u8BB0\u5FC6",
+  refresh: "\u5237\u65B0",
+  search: "\u641C\u7D22\u8BB0\u5FC6",
+  loading: "\u52A0\u8F7D\u4E2D\u2026",
+  empty: "\u8FD8\u6CA1\u6709\u8BB0\u5FC6\u3002",
+  "empty.title": "\u8FD8\u6CA1\u6709\u8BB0\u5FC6",
+  "empty.body": "\u4F60\u6DFB\u52A0\u7684\u8BB0\u5FC6\u4F1A\u663E\u793A\u5728\u8FD9\u91CC\u3002",
+  "empty.filtered": "\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5FC6\u3002",
+  delete: "\u5220\u9664",
+  deleteConfirm: "\u5220\u9664\u201C{{key}}\u201D\uFF1F",
+  edit: "\u7F16\u8F91",
+  save: "\u4FDD\u5B58",
+  cancel: "\u53D6\u6D88",
+  usage: "\u663E\u793A {{shown}} \u6761 \xB7 {{total}} tokens",
+  "access.denied": "\u4F60\u6CA1\u6709\u8BFB\u53D6\u8BB0\u5FC6\u7684\u6743\u9650\u3002",
+  "card.stable": "\u7A33\u5B9A",
+  "card.locked": "\u5DF2\u9501\u5B9A",
+  "card.image": "\u56FE\u7247",
+  "card.imageUnavailable": "\u56FE\u7247\u4E0D\u53EF\u7528",
+  "card.token": "token",
+  "card.tokens": "tokens",
+  "domainKind.real": "\u73B0\u5B9E",
+  "domainKind.fictional": "\u865A\u6784",
+  "domainKind.project": "\u9879\u76EE",
+  "domainKind.sandbox": "\u6C99\u76D2",
+  "domainKind.study": "\u5B66\u4E60",
+  "domainKind.work": "\u5DE5\u4F5C",
+  "domains.button": "\u8BB0\u5FC6\u57DF",
+  "domains.all": "\u5168\u90E8\u8BB0\u5FC6\u57DF",
+  "domains.search": "\u641C\u7D22\u8BB0\u5FC6\u57DF",
+  "domains.name": "\u8BB0\u5FC6\u57DF\u540D\u79F0",
+  "domains.add": "\u65B0\u589E\u8BB0\u5FC6\u57DF",
+  "domains.deleteConfirm": "\u5220\u9664\u8BB0\u5FC6\u57DF\u201C{{name}}\u201D\uFF1F\u5176\u4E2D\u7684\u8BB0\u5FC6\u4E5F\u4F1A\u88AB\u5220\u9664\u3002",
+  "stores.new": "\u65B0\u5EFA\u8BB0\u5FC6\u5E93",
+  "stores.add": "\u6DFB\u52A0",
+  "stores.back": "\u8FD4\u56DE",
+  "stores.search": "\u641C\u7D22\u8BB0\u5FC6\u5E93",
+  "stores.default": "\u9ED8\u8BA4",
+  "stores.editor": "\u7F16\u8F91\u8005",
+  "stores.viewer": "\u67E5\u770B\u8005",
+  "stores.memories": "{{count}} \u6761\u8BB0\u5FC6",
+  "stores.updated": "\u66F4\u65B0\u4E8E {{date}}",
+  "stores.rename": "\u91CD\u547D\u540D\u8BB0\u5FC6\u5E93",
+  "stores.renameTitle": "\u91CD\u547D\u540D\u8BB0\u5FC6\u5E93",
+  "stores.renamePrompt": "\u201C{{name}}\u201D\u7684\u65B0\u540D\u79F0",
+  "stores.deleteTitle": "\u5220\u9664\u8BB0\u5FC6\u5E93",
+  "stores.deleteConfirm": "\u5220\u9664\u8BB0\u5FC6\u5E93\u201C{{name}}\u201D\u53CA\u5176\u5168\u90E8\u8BB0\u5FC6\uFF1F",
+  "stores.clear": "\u6E05\u7A7A\u8BB0\u5FC6\u5E93",
+  "stores.clearTitle": "\u6E05\u7A7A\u8BB0\u5FC6\u5E93",
+  "stores.clearConfirm": "\u5220\u9664\u201C{{name}}\u201D\u4E2D\u7684\u5168\u90E8\u8BB0\u5FC6\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
+  "delete.title": "\u5220\u9664\u8BB0\u5FC6",
+  "delete.imageTitle": "\u5220\u9664\u56FE\u7247\u8BB0\u5FC6",
+  "delete.confirm": "\u5220\u9664\u201C{{key}}\u201D\uFF1F",
+  "delete.imageConfirm": "\u5220\u9664\u8FD9\u5F20\u56FE\u7247\u8BB0\u5FC6\uFF1F",
+  "create.title": "\u521B\u5EFA\u8BB0\u5FC6",
+  "edit.title": "\u7F16\u8F91\u8BB0\u5FC6",
+  "field.key": "\u952E",
+  "field.value": "\u503C",
+  "field.domain": "\u8BB0\u5FC6\u57DF",
+  "field.stable": "\u7A33\u5B9A",
+  "field.stableInfo": "\u7A33\u5B9A\u8BB0\u5FC6\u968F\u7CFB\u7EDF\u57FA\u7EBF\u6CE8\u5165\uFF0C\u800C\u4E0D\u662F\u6BCF\u8F6E\u53EC\u56DE\u3002",
+  "field.locked": "\u9501\u5B9A",
+  "field.lockedInfo": "\u4E0D\u53C2\u4E0E\u8BB0\u5FC6\u62BD\u53D6\uFF0C\u5E76\u62D2\u7EDD\u6A21\u578B\u5199\u5165\u7684\u6539\u52A8\u3002",
+  "field.injection": "\u6CE8\u5165\u65B9\u5F0F",
+  "field.injection.system": "\u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "field.injection.additional": "\u9644\u52A0\u4E0A\u4E0B\u6587",
+  history: "\u5386\u53F2",
+  "history.empty": "\u6682\u65E0\u5386\u53F2\u3002",
+  "image.title": "\u8BB0\u5FC6\u56FE\u7247",
+  "preferences.use": "\u4F7F\u7528\u8BB0\u5FC6",
+  "preferences.info": "\u5141\u8BB8\u667A\u80FD\u4F53\u8BFB\u53D6\u548C\u5199\u5165\u4F60\u4FDD\u5B58\u7684\u8BB0\u5FC6\u3002",
+  "settings.useMemory": "\u4F7F\u7528\u8BB0\u5FC6",
+  "settings.useMemoryInfo": "\u542F\u7528\u540E\uFF0C\u667A\u80FD\u4F53\u4F1A\u8BFB\u53D6\u4F60\u7684\u8BB0\u5FC6\u4F5C\u4E3A\u4E0A\u4E0B\u6587\uFF0C\u5E76\u81EA\u52A8\u4ECE\u4F60\u7684\u5BF9\u8BDD\u4E2D\u63D0\u53D6\u8BB0\u5FC6\u3002\u5173\u95ED\u53EF\u8BA9\u4F60\u7684\u8BB0\u5FC6\u5B8C\u5168\u4E0D\u8FDB\u5165\u8BE5\u667A\u80FD\u4F53\u7684\u5BF9\u8BDD\u3002",
+  "settings.store": "\u8BB0\u5FC6\u5E93",
+  "settings.selectStore": "\u9009\u62E9\u8BB0\u5FC6\u5E93",
+  "settings.searchStores": "\u641C\u7D22\u8BB0\u5FC6\u5E93",
+  "settings.clear": "\u6E05\u9664",
+  "settings.storeRequired": "\u672A\u9009\u62E9\u8BB0\u5FC6\u5E93\u7684\u667A\u80FD\u4F53\u5C06\u7981\u7528\u8BB0\u5FC6\u529F\u80FD\u3002",
+  "settings.domains": "\u8BB0\u5FC6\u57DF",
+  "settings.domainDefaultOnly": "\u4EC5\u9ED8\u8BA4\u8BB0\u5FC6\u57DF",
+  "settings.domainAgentsHint": "\u4E0E\u8BE5\u667A\u80FD\u4F53\u7684\u65B0\u5BF9\u8BDD\u4F1A\u9ED8\u8BA4\u6FC0\u6D3B\u8FD9\u4E9B\u8BB0\u5FC6\u57DF\u3002\u8BB0\u5FC6\u53EA\u4F1A\u5199\u5165\u5E76\u53EC\u56DE\u81EA\u5904\u4E8E\u6FC0\u6D3B\u72B6\u6001\u7684\u8BB0\u5FC6\u57DF\u3002",
+  "settings.domainNotReal": "\u975E\u73B0\u5B9E",
+  "settings.storeDefault": "\u9ED8\u8BA4",
+  "cards.recalled": "\u5DF2\u56DE\u60F3\u4FDD\u5B58\u7684\u8BB0\u5FC6",
+  "cards.updated": "\u5DF2\u66F4\u65B0\u4FDD\u5B58\u7684\u8BB0\u5FC6",
+  "cards.error": "\u8BB0\u5FC6\u9519\u8BEF",
+  "cards.recalledItems": "\u5DF2\u56DE\u60F3\u7684\u8BB0\u5FC6",
+  "cards.updatedItems": "\u5DF2\u66F4\u65B0\u7684\u8BB0\u5FC6",
+  "cards.deletedItems": "\u5DF2\u5220\u9664\u7684\u8BB0\u5FC6",
+  "header.scope": "\u8BB0\u5FC6\u8303\u56F4",
+  "header.domains": "\u8BB0\u5FC6\u57DF",
+  "header.created": "\u672C\u5BF9\u8BDD\u5199\u5165",
+  "header.recalled": "\u672C\u5BF9\u8BDD\u53EC\u56DE",
+  "header.empty": "\u8FD9\u4E2A\u5BF9\u8BDD\u8FD8\u6CA1\u6709\u8BB0\u5FC6\u3002",
+  "header.close": "\u5173\u95ED"
+};
 var memoryCatalogs = {
-  en: {
-    navTitle: "Memories (plugin)",
-    title: "Memories",
-    refresh: "Refresh",
-    search: "Search memories",
-    loading: "Loading\u2026",
-    empty: "No memories yet.",
-    "empty.title": "No memories yet",
-    "empty.body": "Memories you add will show up here.",
-    "empty.filtered": "No memories match your search.",
-    delete: "Delete",
-    deleteConfirm: 'Delete "{{key}}"?',
-    edit: "Edit",
-    save: "Save",
-    cancel: "Cancel",
-    usage: "{{shown}} shown \xB7 {{total}} tokens",
-    "access.denied": "You do not have permission to read memories.",
-    "card.stable": "Stable",
-    "card.locked": "Locked",
-    "card.image": "Image",
-    "card.imageUnavailable": "Image unavailable",
-    "card.token": "token",
-    "card.tokens": "tokens",
-    "domainKind.real": "Real",
-    "domainKind.fictional": "Fictional",
-    "domainKind.project": "Project",
-    "domainKind.sandbox": "Sandbox",
-    "domainKind.study": "Study",
-    "domainKind.work": "Work",
-    "domains.button": "Domains",
-    "domains.all": "All domains",
-    "domains.search": "Search domains",
-    "domains.name": "Domain name",
-    "domains.add": "Add domain",
-    "domains.deleteConfirm": 'Delete domain "{{name}}"? Its memories will be removed.',
-    "stores.new": "New store",
-    "stores.add": "Add",
-    "stores.back": "Back",
-    "stores.search": "Search memory stores",
-    "stores.default": "Default",
-    "stores.editor": "Editor",
-    "stores.viewer": "Viewer",
-    "stores.memories": "{{count}} memories",
-    "stores.updated": "Updated {{date}}",
-    "stores.rename": "Rename store",
-    "stores.renameTitle": "Rename memory store",
-    "stores.renamePrompt": 'New name for "{{name}}"',
-    "stores.deleteTitle": "Delete memory store",
-    "stores.deleteConfirm": 'Delete store "{{name}}" and all its memories?',
-    "stores.clear": "Clear memory store",
-    "stores.clearTitle": "Clear memory store",
-    "stores.clearConfirm": 'Delete every memory in "{{name}}"? This cannot be undone.',
-    "delete.title": "Delete memory",
-    "delete.imageTitle": "Delete image memory",
-    "delete.confirm": 'Delete "{{key}}"?',
-    "delete.imageConfirm": "Delete this image memory?",
-    "create.title": "Create memory",
-    "edit.title": "Edit memory",
-    "field.key": "Key",
-    "field.value": "Value",
-    "field.domain": "Domain",
-    "field.stable": "Stable",
-    "field.stableInfo": "Stable memories ride the system baseline instead of per-turn recall.",
-    "field.locked": "Locked",
-    "field.lockedInfo": "Hide from the extractor and refuse every model-written change.",
-    "field.injection": "Injection",
-    "field.injection.system": "System prompt",
-    "field.injection.additional": "Additional context",
-    history: "History",
-    "history.empty": "No history yet.",
-    "image.title": "Memory image",
-    "preferences.use": "Use memory",
-    "preferences.info": "Let agents read and write your saved memories.",
-    "settings.useMemory": "Use memory",
-    "settings.useMemoryInfo": "When enabled, the agent reads your memories for context and automatically extracts memories from your conversations. Disable to keep your memories out of this agent\u2019s chats.",
-    "settings.store": "Memory store",
-    "settings.selectStore": "Select a memory store",
-    "settings.searchStores": "Search memory stores",
-    "settings.clear": "Clear",
-    "settings.storeRequired": "An agent without a memory store has memory disabled.",
-    "settings.domains": "Memory domains",
-    "settings.domainDefaultOnly": "Default domain only",
-    "settings.domainAgentsHint": "New chats with this agent start with these domains active. Memories are only written into and recalled from the active domains.",
-    "settings.domainNotReal": "not real",
-    "settings.storeDefault": "Default",
-    "cards.recalled": "Recalled saved memory",
-    "cards.updated": "Updated saved memory",
-    "cards.error": "Memory error",
-    "cards.recalledItems": "Recalled memories",
-    "cards.updatedItems": "Updated memories",
-    "cards.deletedItems": "Deleted memories",
-    "header.scope": "Memory scope",
-    "header.domains": "Memory domains",
-    "header.created": "Written by this chat",
-    "header.recalled": "Recalled in this chat",
-    "header.empty": "No memories in this chat yet.",
-    "header.close": "Close"
-  },
-  "zh-Hans": {
-    navTitle: "\u8BB0\u5FC6\uFF08\u63D2\u4EF6\uFF09",
-    title: "\u8BB0\u5FC6",
-    refresh: "\u5237\u65B0",
-    search: "\u641C\u7D22\u8BB0\u5FC6",
-    loading: "\u52A0\u8F7D\u4E2D\u2026",
-    empty: "\u8FD8\u6CA1\u6709\u8BB0\u5FC6\u3002",
-    "empty.title": "\u8FD8\u6CA1\u6709\u8BB0\u5FC6",
-    "empty.body": "\u4F60\u6DFB\u52A0\u7684\u8BB0\u5FC6\u4F1A\u663E\u793A\u5728\u8FD9\u91CC\u3002",
-    "empty.filtered": "\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5FC6\u3002",
-    delete: "\u5220\u9664",
-    deleteConfirm: "\u5220\u9664\u201C{{key}}\u201D\uFF1F",
-    edit: "\u7F16\u8F91",
-    save: "\u4FDD\u5B58",
-    cancel: "\u53D6\u6D88",
-    usage: "\u663E\u793A {{shown}} \u6761 \xB7 {{total}} tokens",
-    "access.denied": "\u4F60\u6CA1\u6709\u8BFB\u53D6\u8BB0\u5FC6\u7684\u6743\u9650\u3002",
-    "card.stable": "\u7A33\u5B9A",
-    "card.locked": "\u5DF2\u9501\u5B9A",
-    "card.image": "\u56FE\u7247",
-    "card.imageUnavailable": "\u56FE\u7247\u4E0D\u53EF\u7528",
-    "card.token": "token",
-    "card.tokens": "tokens",
-    "domainKind.real": "\u73B0\u5B9E",
-    "domainKind.fictional": "\u865A\u6784",
-    "domainKind.project": "\u9879\u76EE",
-    "domainKind.sandbox": "\u6C99\u76D2",
-    "domainKind.study": "\u5B66\u4E60",
-    "domainKind.work": "\u5DE5\u4F5C",
-    "domains.button": "\u8BB0\u5FC6\u57DF",
-    "domains.all": "\u5168\u90E8\u8BB0\u5FC6\u57DF",
-    "domains.search": "\u641C\u7D22\u8BB0\u5FC6\u57DF",
-    "domains.name": "\u8BB0\u5FC6\u57DF\u540D\u79F0",
-    "domains.add": "\u65B0\u589E\u8BB0\u5FC6\u57DF",
-    "domains.deleteConfirm": "\u5220\u9664\u8BB0\u5FC6\u57DF\u201C{{name}}\u201D\uFF1F\u5176\u4E2D\u7684\u8BB0\u5FC6\u4E5F\u4F1A\u88AB\u5220\u9664\u3002",
-    "stores.new": "\u65B0\u5EFA\u8BB0\u5FC6\u5E93",
-    "stores.add": "\u6DFB\u52A0",
-    "stores.back": "\u8FD4\u56DE",
-    "stores.search": "\u641C\u7D22\u8BB0\u5FC6\u5E93",
-    "stores.default": "\u9ED8\u8BA4",
-    "stores.editor": "\u7F16\u8F91\u8005",
-    "stores.viewer": "\u67E5\u770B\u8005",
-    "stores.memories": "{{count}} \u6761\u8BB0\u5FC6",
-    "stores.updated": "\u66F4\u65B0\u4E8E {{date}}",
-    "stores.rename": "\u91CD\u547D\u540D\u8BB0\u5FC6\u5E93",
-    "stores.renameTitle": "\u91CD\u547D\u540D\u8BB0\u5FC6\u5E93",
-    "stores.renamePrompt": "\u201C{{name}}\u201D\u7684\u65B0\u540D\u79F0",
-    "stores.deleteTitle": "\u5220\u9664\u8BB0\u5FC6\u5E93",
-    "stores.deleteConfirm": "\u5220\u9664\u8BB0\u5FC6\u5E93\u201C{{name}}\u201D\u53CA\u5176\u5168\u90E8\u8BB0\u5FC6\uFF1F",
-    "stores.clear": "\u6E05\u7A7A\u8BB0\u5FC6\u5E93",
-    "stores.clearTitle": "\u6E05\u7A7A\u8BB0\u5FC6\u5E93",
-    "stores.clearConfirm": "\u5220\u9664\u201C{{name}}\u201D\u4E2D\u7684\u5168\u90E8\u8BB0\u5FC6\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
-    "delete.title": "\u5220\u9664\u8BB0\u5FC6",
-    "delete.imageTitle": "\u5220\u9664\u56FE\u7247\u8BB0\u5FC6",
-    "delete.confirm": "\u5220\u9664\u201C{{key}}\u201D\uFF1F",
-    "delete.imageConfirm": "\u5220\u9664\u8FD9\u5F20\u56FE\u7247\u8BB0\u5FC6\uFF1F",
-    "create.title": "\u521B\u5EFA\u8BB0\u5FC6",
-    "edit.title": "\u7F16\u8F91\u8BB0\u5FC6",
-    "field.key": "\u952E",
-    "field.value": "\u503C",
-    "field.domain": "\u8BB0\u5FC6\u57DF",
-    "field.stable": "\u7A33\u5B9A",
-    "field.stableInfo": "\u7A33\u5B9A\u8BB0\u5FC6\u968F\u7CFB\u7EDF\u57FA\u7EBF\u6CE8\u5165\uFF0C\u800C\u4E0D\u662F\u6BCF\u8F6E\u53EC\u56DE\u3002",
-    "field.locked": "\u9501\u5B9A",
-    "field.lockedInfo": "\u4E0D\u53C2\u4E0E\u8BB0\u5FC6\u62BD\u53D6\uFF0C\u5E76\u62D2\u7EDD\u6A21\u578B\u5199\u5165\u7684\u6539\u52A8\u3002",
-    "field.injection": "\u6CE8\u5165\u65B9\u5F0F",
-    "field.injection.system": "\u7CFB\u7EDF\u63D0\u793A\u8BCD",
-    "field.injection.additional": "\u9644\u52A0\u4E0A\u4E0B\u6587",
-    history: "\u5386\u53F2",
-    "history.empty": "\u6682\u65E0\u5386\u53F2\u3002",
-    "image.title": "\u8BB0\u5FC6\u56FE\u7247",
-    "preferences.use": "\u4F7F\u7528\u8BB0\u5FC6",
-    "preferences.info": "\u5141\u8BB8\u667A\u80FD\u4F53\u8BFB\u53D6\u548C\u5199\u5165\u4F60\u4FDD\u5B58\u7684\u8BB0\u5FC6\u3002",
-    "settings.useMemory": "\u4F7F\u7528\u8BB0\u5FC6",
-    "settings.useMemoryInfo": "\u542F\u7528\u540E\uFF0C\u667A\u80FD\u4F53\u4F1A\u8BFB\u53D6\u4F60\u7684\u8BB0\u5FC6\u4F5C\u4E3A\u4E0A\u4E0B\u6587\uFF0C\u5E76\u81EA\u52A8\u4ECE\u4F60\u7684\u5BF9\u8BDD\u4E2D\u63D0\u53D6\u8BB0\u5FC6\u3002\u5173\u95ED\u53EF\u8BA9\u4F60\u7684\u8BB0\u5FC6\u5B8C\u5168\u4E0D\u8FDB\u5165\u8BE5\u667A\u80FD\u4F53\u7684\u5BF9\u8BDD\u3002",
-    "settings.store": "\u8BB0\u5FC6\u5E93",
-    "settings.selectStore": "\u9009\u62E9\u8BB0\u5FC6\u5E93",
-    "settings.searchStores": "\u641C\u7D22\u8BB0\u5FC6\u5E93",
-    "settings.clear": "\u6E05\u9664",
-    "settings.storeRequired": "\u672A\u9009\u62E9\u8BB0\u5FC6\u5E93\u7684\u667A\u80FD\u4F53\u5C06\u7981\u7528\u8BB0\u5FC6\u529F\u80FD\u3002",
-    "settings.domains": "\u8BB0\u5FC6\u57DF",
-    "settings.domainDefaultOnly": "\u4EC5\u9ED8\u8BA4\u8BB0\u5FC6\u57DF",
-    "settings.domainAgentsHint": "\u4E0E\u8BE5\u667A\u80FD\u4F53\u7684\u65B0\u5BF9\u8BDD\u4F1A\u9ED8\u8BA4\u6FC0\u6D3B\u8FD9\u4E9B\u8BB0\u5FC6\u57DF\u3002\u8BB0\u5FC6\u53EA\u4F1A\u5199\u5165\u5E76\u53EC\u56DE\u81EA\u5904\u4E8E\u6FC0\u6D3B\u72B6\u6001\u7684\u8BB0\u5FC6\u57DF\u3002",
-    "settings.domainNotReal": "\u975E\u73B0\u5B9E",
-    "settings.storeDefault": "\u9ED8\u8BA4",
-    "cards.recalled": "\u5DF2\u56DE\u60F3\u4FDD\u5B58\u7684\u8BB0\u5FC6",
-    "cards.updated": "\u5DF2\u66F4\u65B0\u4FDD\u5B58\u7684\u8BB0\u5FC6",
-    "cards.error": "\u8BB0\u5FC6\u9519\u8BEF",
-    "cards.recalledItems": "\u5DF2\u56DE\u60F3\u7684\u8BB0\u5FC6",
-    "cards.updatedItems": "\u5DF2\u66F4\u65B0\u7684\u8BB0\u5FC6",
-    "cards.deletedItems": "\u5DF2\u5220\u9664\u7684\u8BB0\u5FC6",
-    "header.scope": "\u8BB0\u5FC6\u8303\u56F4",
-    "header.domains": "\u8BB0\u5FC6\u57DF",
-    "header.created": "\u672C\u5BF9\u8BDD\u5199\u5165",
-    "header.recalled": "\u672C\u5BF9\u8BDD\u53EC\u56DE",
-    "header.empty": "\u8FD9\u4E2A\u5BF9\u8BDD\u8FD8\u6CA1\u6709\u8BB0\u5FC6\u3002",
-    "header.close": "\u5173\u95ED"
-  }
+  en,
+  "zh-Hans": zhHans
 };
 
-// client/src/runtime.js
-var state = { React: null, api: null, ui: null, appUi: null, translator: null };
+// client/src/runtime.ts
+var state = {
+  React: null,
+  api: null,
+  ui: null,
+  appUi: null,
+  translator: null
+};
 var hImpl = null;
 var Fragment = null;
+function hostReact() {
+  if (state.React == null) {
+    throw new Error("memory plugin runtime is not configured");
+  }
+  return state.React;
+}
+function configuredTranslator() {
+  if (state.translator == null) {
+    throw new Error("memory plugin runtime is not configured");
+  }
+  return state.translator;
+}
 function configure(api, ui, translator, appUi = null) {
   state.api = api;
   state.React = api.React;
@@ -212,48 +232,81 @@ function configure(api, ui, translator, appUi = null) {
   Fragment = api.React.Fragment;
 }
 function h(type, props, ...children) {
-  return hImpl(type, props, ...children);
+  const createElement = hImpl;
+  if (createElement == null) {
+    throw new Error("memory plugin runtime is not configured");
+  }
+  return createElement(type, props, ...children);
+}
+function createHostElement(type, props) {
+  const createElement = hImpl;
+  if (createElement == null) {
+    throw new Error("memory plugin runtime is not configured");
+  }
+  return createElement(type, props);
 }
 function currentApi() {
+  if (state.api == null) {
+    throw new Error("memory plugin runtime is not configured");
+  }
   return state.api;
 }
-var useState = (...args) => state.React.useState(...args);
-var useEffect = (...args) => state.React.useEffect(...args);
-var useMemo = (...args) => state.React.useMemo(...args);
-var useCallback = (...args) => state.React.useCallback(...args);
-var useRef = (...args) => state.React.useRef(...args);
-var useLayoutEffect = (...args) => state.React.useLayoutEffect(...args);
-function useLocalize() {
-  state.translator.useLocale();
-  return state.translator.t;
+function useState(initialState) {
+  return hostReact().useState(initialState);
 }
-var t = (...args) => state.translator.t(...args);
+function useEffect(effect, deps) {
+  hostReact().useEffect(effect, deps);
+}
+function useMemo(factory, deps) {
+  return hostReact().useMemo(factory, deps);
+}
+function useCallback(callback, deps) {
+  return hostReact().useCallback(callback, deps);
+}
+function useRef(initialValue) {
+  return hostReact().useRef(initialValue);
+}
+function useLayoutEffect(effect, deps) {
+  hostReact().useLayoutEffect(effect, deps);
+}
+function useLocalize() {
+  const translator = configuredTranslator();
+  translator.useLocale();
+  return translator.t;
+}
+function t(key, values) {
+  return configuredTranslator().t(key, values);
+}
 function cn(...values) {
   return values.filter(Boolean).join(" ");
 }
 var iconCache = /* @__PURE__ */ new Map();
 function makeIcon(name) {
-  if (!iconCache.has(name)) {
-    const Icon = (props) => {
-      const Base = state.api?.icons?.[name];
-      return Base ? hImpl(Base, props) : null;
-    };
-    Icon.displayName = `Icon(${name})`;
-    iconCache.set(name, Icon);
+  const cached = iconCache.get(name);
+  if (cached != null) {
+    return cached;
   }
-  return iconCache.get(name);
+  const Icon = (props) => {
+    const Base = state.api?.icons?.[name];
+    return Base ? createHostElement(Base, props) : null;
+  };
+  Icon.displayName = `Icon(${name})`;
+  iconCache.set(name, Icon);
+  return Icon;
 }
 var uiCache = /* @__PURE__ */ new Map();
 function makeUi(name) {
-  if (!uiCache.has(name)) {
-    const Component = (props) => {
-      const Base = state.ui?.[name];
-      return Base ? hImpl(Base, props) : null;
-    };
-    Component.displayName = `Ui(${name})`;
-    uiCache.set(name, Component);
+  const cached = uiCache.get(name);
+  if (cached != null) {
+    return cached;
   }
-  return uiCache.get(name);
+  const Component = (props) => {
+    const Base = state.ui?.[name];
+    return Base ? createHostElement(Base, props) : null;
+  };
+  Component.displayName = `Ui(${name})`;
+  uiCache.set(name, Component);
+  return Component;
 }
 var Button = makeUi("Button");
 var Label = makeUi("Label");
@@ -283,15 +336,17 @@ var Alert = makeUi("Alert");
 var DropdownPopup = makeUi("DropdownPopup");
 var appCache = /* @__PURE__ */ new Map();
 function makeApp(name) {
-  if (!appCache.has(name)) {
-    const Component = (props) => {
-      const Base = state.appUi?.[name];
-      return Base ? hImpl(Base, props) : null;
-    };
-    Component.displayName = `App(${name})`;
-    appCache.set(name, Component);
+  const cached = appCache.get(name);
+  if (cached != null) {
+    return cached;
   }
-  return appCache.get(name);
+  const Component = (props) => {
+    const Base = state.appUi?.[name];
+    return Base ? createHostElement(Base, props) : null;
+  };
+  Component.displayName = `App(${name})`;
+  appCache.set(name, Component);
+  return Component;
 }
 var GenericGrantAccessDialog = makeApp("GenericGrantAccessDialog");
 var AdminSettingsDialog = makeApp("AdminSettingsDialog");
@@ -300,7 +355,14 @@ function useToastContext() {
   return { showToast: () => {
   } };
 }
-function PanelContent({ isLoading, isEmpty, skeleton, empty, children, className }) {
+function PanelContent({
+  isLoading,
+  isEmpty,
+  skeleton,
+  empty,
+  children,
+  className
+}) {
   const localize = useLocalize();
   const body = isLoading ? [
     h(
@@ -334,7 +396,7 @@ function PanelFooter({ children, className }) {
   );
 }
 function useTranslation() {
-  const locale = state.translator.locale;
+  const locale = configuredTranslator().locale;
   return {
     t,
     i18n: { language: locale, resolvedLanguage: locale, on: () => {
@@ -343,7 +405,7 @@ function useTranslation() {
   };
 }
 function useQueryClient() {
-  return state.appUi?.useQueryClient?.() ?? { invalidateQueries: () => {
+  return state.appUi?.useQueryClient?.() ?? { invalidateQueries: async () => {
   } };
 }
 function useAuthContext() {
@@ -358,8 +420,8 @@ function useExpandCollapse(isExpanded) {
   if (typeof host === "function") {
     return host(isExpanded);
   }
-  const ref = state.React.useRef(null);
-  const style = state.React.useMemo(
+  const ref = hostReact().useRef(null);
+  const style = hostReact().useMemo(
     () => ({
       display: "grid",
       gridTemplateRows: isExpanded ? "1fr" : "0fr",
@@ -374,7 +436,7 @@ function useQuery(options) {
   if (typeof host === "function") {
     return host(options);
   }
-  const [result, setResult] = state.React.useState({
+  const [result, setResult] = hostReact().useState({
     data: void 0,
     isLoading: options.enabled !== false,
     isError: false,
@@ -383,7 +445,7 @@ function useQuery(options) {
     }
   });
   const key = JSON.stringify(options.queryKey ?? []);
-  state.React.useEffect(() => {
+  hostReact().useEffect(() => {
     if (options.enabled === false) {
       setResult((current) => ({ ...current, isLoading: false }));
       return void 0;
@@ -391,11 +453,27 @@ function useQuery(options) {
     let cancelled = false;
     setResult((current) => ({ ...current, isLoading: true }));
     Promise.resolve().then(() => options.queryFn()).then((data) => {
-      if (!cancelled) setResult({ data, isLoading: false, isError: false, error: null, refetch: () => {
-      } });
+      if (!cancelled) {
+        setResult({
+          data,
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: () => {
+          }
+        });
+      }
     }).catch((error) => {
-      if (!cancelled) setResult({ data: void 0, isLoading: false, isError: true, error, refetch: () => {
-      } });
+      if (!cancelled) {
+        setResult({
+          data: void 0,
+          isLoading: false,
+          isError: true,
+          error,
+          refetch: () => {
+          }
+        });
+      }
     });
     return () => {
       cancelled = true;
@@ -408,24 +486,24 @@ function useMutation(options) {
   if (typeof host === "function") {
     return host(options);
   }
-  const [isPending, setPending] = state.React.useState(false);
-  const mutate = (vars, local = {}) => {
+  const [isPending, setPending] = hostReact().useState(false);
+  const mutate = (variables, local = {}) => {
     setPending(true);
-    options.onMutate?.(vars);
-    Promise.resolve().then(() => options.mutationFn(vars)).then((data) => {
+    options.onMutate?.(variables);
+    Promise.resolve().then(() => options.mutationFn(variables)).then((data) => {
       setPending(false);
-      options.onSuccess?.(data);
+      options.onSuccess?.(data, variables);
       local.onSuccess?.(data);
     }).catch((error) => {
       setPending(false);
-      options.onError?.(error);
+      options.onError?.(error, variables);
       local.onError?.(error);
     });
   };
   return { mutate, isPending };
 }
 
-// client/src/datetime.js
+// client/src/datetime.ts
 var formatMemoryDateTime = (dateString) => new Date(dateString).toLocaleDateString(void 0, {
   month: "short",
   day: "numeric",
@@ -436,10 +514,13 @@ var formatMemoryDateTime = (dateString) => new Date(dateString).toLocaleDateStri
 var formatterCache = /* @__PURE__ */ new Map();
 function relativeFormatter(locale) {
   const key = locale ?? "";
-  if (!formatterCache.has(key)) {
-    formatterCache.set(key, new Intl.RelativeTimeFormat(locale ?? void 0, { numeric: "auto" }));
+  const cached = formatterCache.get(key);
+  if (cached != null) {
+    return cached;
   }
-  return formatterCache.get(key);
+  const formatter = new Intl.RelativeTimeFormat(locale ?? void 0, { numeric: "auto" });
+  formatterCache.set(key, formatter);
+  return formatter;
 }
 function getMessageTimestamp(value, locale) {
   if (value == null || value === "") {
@@ -474,14 +555,14 @@ function getMessageTimestamp(value, locale) {
   };
 }
 
-// client/src/utils.js
+// client/src/utils.ts
 var EXTENSION_BY_MIME = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
   "image/gif": "gif"
 };
-var extensionForMime = (mime) => EXTENSION_BY_MIME[mime] ?? "png";
+var extensionForMime = (mime) => (mime != null ? EXTENSION_BY_MIME[mime] : void 0) ?? "png";
 function matchSorter(items, query, options = {}) {
   const needle = query.trim().toLowerCase();
   if (needle === "") {
@@ -497,7 +578,12 @@ function matchSorter(items, query, options = {}) {
 }
 var MEMORY_KEY_PATTERN = /^[a-z0-9_]+$/;
 var sameStore = (memory, storeId) => (memory.storeId ?? void 0) === (storeId ?? void 0);
-function getMemoryKeyError({ key, memories, storeId, originalKey }) {
+function getMemoryKeyError({
+  key,
+  memories,
+  storeId,
+  originalKey
+}) {
   const trimmed = key.trim();
   if (!trimmed) {
     return "com_ui_field_required";
@@ -508,20 +594,22 @@ function getMemoryKeyError({ key, memories, storeId, originalKey }) {
   if (trimmed === originalKey) {
     return null;
   }
-  const isTaken = memories?.some(
-    (memory) => memory.key === trimmed && sameStore(memory, storeId)
-  );
+  const isTaken = memories?.some((memory) => memory.key === trimmed && sameStore(memory, storeId));
   return isTaken === true ? "com_ui_memory_key_exists" : null;
 }
 function getMemoryValueError(value) {
   return value.trim() ? null : "com_ui_field_required";
 }
 function getMemoryApiErrorMessage(error, fallback) {
-  const message = error?.response?.data?.error ?? error?.message;
+  if (typeof error !== "object" || error === null) {
+    return fallback;
+  }
+  const candidate = error;
+  const message = candidate.response?.data?.error ?? candidate.message;
   return typeof message === "string" && message.trim() ? message : fallback;
 }
 
-// client/src/sdk.js
+// client/src/sdk.ts
 var Permissions = {
   USE: "USE",
   CREATE: "CREATE",
@@ -534,13 +622,20 @@ var Permissions = {
 var PermissionTypes = { MEMORIES: "MEMORIES" };
 var ResourceType = { MEMORYSTORE: "memoryStore" };
 var QueryKeys = { memoryStores: "memoryStores" };
-var MEMORY_DOMAIN_KINDS = ["real", "fictional", "project", "sandbox", "study", "work"];
+var MEMORY_DOMAIN_KINDS = [
+  "real",
+  "fictional",
+  "project",
+  "sandbox",
+  "study",
+  "work"
+];
 
-// client/src/data.js
-function useRpc(method, params, enabled = true) {
+// client/src/data.ts
+function useRpc(method, params = {}, enabled = true) {
   const result = useQuery({
-    queryKey: [method, params ?? {}],
-    queryFn: () => currentApi().call(method, params ?? {}),
+    queryKey: [method, params],
+    queryFn: () => currentApi().call(method, params),
     enabled
   });
   return {
@@ -554,19 +649,22 @@ function useRpc(method, params, enabled = true) {
 function useMutation2(method, options = {}) {
   const queryClient = useQueryClient();
   const result = useMutation({
-    mutationFn: (vars) => currentApi().call(method, vars ?? {}),
-    onMutate: (vars, context) => options.onMutate?.(vars, context),
-    onSuccess: (data, variables, context) => {
+    mutationFn: (variables) => currentApi().call(method, variables),
+    onMutate: (variables) => options.onMutate?.(variables),
+    onSuccess: (data, variables) => {
       if (options.invalidate !== false) {
         queryClient.invalidateQueries();
       }
-      options.onSuccess?.(data, variables, context);
+      options.onSuccess?.(data, variables);
     },
-    onError: (error, variables, context) => options.onError?.(error, variables, context),
-    onSettled: (data, error, variables, context) => options.onSettled?.(data, error, variables, context)
+    onError: (error, variables) => {
+      void variables;
+      options.onError?.(error);
+    },
+    onSettled: (data, error, variables) => options.onSettled?.(data, error, variables)
   });
   return {
-    mutate: (vars, local = {}) => result.mutate(vars, {
+    mutate: (variables, local = {}) => result.mutate(variables, {
       onSuccess: local.onSuccess,
       onError: local.onError,
       onSettled: local.onSettled
@@ -581,23 +679,17 @@ function useMutation2(method, options = {}) {
 }
 function useMemoriesQuery(storeId, options = {}) {
   const params = storeId ? { storeId } : {};
-  const result = useRpc("memories.list", params, options.enabled !== false);
-  return {
-    data: result.data,
-    isLoading: result.isLoading,
-    isError: result.isError,
-    error: result.error,
-    refetch: result.refetch
-  };
+  return useRpc("memories.list", params, options.enabled !== false);
 }
 function useMemoryStoresQuery() {
-  const result = useRpc("memories.stores", {});
-  return { data: result.data, isLoading: result.isLoading, isError: result.isError };
+  return useRpc("memories.stores", {});
 }
 function useMemoryDomainsQuery(storeId, conversationId, options = {}) {
-  const params = { ...storeId ? { storeId } : {}, ...conversationId ? { conversationId } : {} };
-  const result = useRpc("memories.domains", params, options.enabled !== false);
-  return { data: result.data, isLoading: result.isLoading, isError: result.isError };
+  const params = {
+    ...storeId ? { storeId } : {},
+    ...conversationId ? { conversationId } : {}
+  };
+  return useRpc("memories.domains", params, options.enabled !== false);
 }
 function useGetUserQuery() {
   const result = useRpc("memories.preferences", {});
@@ -611,23 +703,23 @@ function useConversationMemoriesQuery(conversationId, storeId, options = {}) {
     ...conversationId ? { conversationId } : {},
     ...storeId ? { storeId } : {}
   };
-  const result = useRpc(
+  return useRpc(
     "memories.conversation",
     params,
     Boolean(conversationId) && options.enabled !== false
   );
-  return { data: result.data, isLoading: result.isLoading, isError: result.isError };
 }
-function useSetMemoryDomainActiveMutation(options) {
-  return useMutation2("memories.domains.setActive", options);
-}
+var useSetMemoryDomainActiveMutation = (options = {}) => useMutation2(
+  "memories.domains.setActive",
+  options
+);
 function useMemoryVersionsQuery(key, storeId, options = {}) {
   const result = useRpc(
     "memories.versions",
     { key, ...storeId ? { storeId } : {} },
     Boolean(key) && options.enabled !== false
   );
-  return { data: result.data, isLoading: result.isLoading };
+  return { data: result.data, isLoading: result.isLoading, isError: result.isError };
 }
 function useVFSImageSrcQuery(value, options = {}) {
   const isUrl = typeof value === "string" && value.startsWith("/memory/images/");
@@ -639,21 +731,30 @@ function useVFSImageSrcQuery(value, options = {}) {
   );
   return { data: result.data?.dataUrl, isLoading: result.isLoading };
 }
-var useCreateMemoryMutation = (options) => useMutation2("memories.create", options);
-var useUpdateMemoryMutation = (options) => useMutation2("memories.update", options);
-var useDeleteMemoryMutation = (options) => useMutation2("memories.delete", options);
-var useDeleteMemoryImageMutation = (options) => useMutation2("memories.images.delete", options);
-var useCreateMemoryStoreMutation = (options) => useMutation2("memories.stores.create", options);
-var useUpdateMemoryStoreMutation = (options) => useMutation2("memories.stores.rename", options);
-var useDeleteMemoryStoreMutation = (options) => useMutation2("memories.stores.delete", options);
-var useClearMemoryStoreMutation = (options) => useMutation2("memories.stores.clear", options);
-var useCreateMemoryDomainMutation = (options) => useMutation2("memories.domains.create", options);
-var useUpdateMemoryDomainMutation = (options) => useMutation2("memories.domains.update", options);
-var useDeleteMemoryDomainMutation = (options) => useMutation2("memories.domains.delete", options);
-var useUpdateMemoryPreferencesMutation = (options) => useMutation2("memories.preferences.set", options);
-var useRestoreMemoryVersionMutation = (options) => useMutation2("memories.versions.restore", options);
+var useCreateMemoryMutation = (options = {}) => useMutation2("memories.create", options);
+var useUpdateMemoryMutation = (options = {}) => useMutation2("memories.update", options);
+var useDeleteMemoryMutation = (options = {}) => useMutation2("memories.delete", options);
+var useDeleteMemoryImageMutation = (options = {}) => useMutation2("memories.images.delete", options);
+var useCreateMemoryStoreMutation = (options = {}) => useMutation2("memories.stores.create", options);
+var useUpdateMemoryStoreMutation = (options = {}) => useMutation2("memories.stores.rename", options);
+var useDeleteMemoryStoreMutation = (options = {}) => useMutation2("memories.stores.delete", options);
+var useClearMemoryStoreMutation = (options = {}) => useMutation2("memories.stores.clear", options);
+var useCreateMemoryDomainMutation = (options = {}) => useMutation2("memories.domains.create", options);
+var useUpdateMemoryDomainMutation = (options = {}) => useMutation2("memories.domains.update", options);
+var useDeleteMemoryDomainMutation = (options = {}) => useMutation2("memories.domains.delete", options);
+var useUpdateMemoryPreferencesMutation = (options = {}) => useMutation2(
+  "memories.preferences.set",
+  options
+);
+var useRestoreMemoryVersionMutation = (options = {}) => useMutation2(
+  "memories.versions.restore",
+  options
+);
 function useUpdateMemoryPermissionsMutation(options = {}) {
-  return useMutation2("memories.permissions.set", options);
+  return useMutation2(
+    "memories.permissions.set",
+    options
+  );
 }
 
 // client/src/components/MemoryDomainDeleteDialog.tsx
@@ -704,7 +805,7 @@ function MemoryDomainDeleteDialog({
   ));
 }
 
-// client/src/constants.js
+// client/src/constants.ts
 var MEMORY_DOMAIN_KIND_LABEL_KEYS = {
   real: "com_ui_memory_domain_kind_real",
   fictional: "com_ui_memory_domain_kind_fictional",
@@ -960,7 +1061,12 @@ function MemoryStoreClearDialog({
 // client/src/components/MemoryDomainChip.tsx
 var Database = makeIcon("database");
 var CHIP_CLASS = "inline-flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium";
-function MemoryDomainChip({ domain, showKind = true, showName = true, className }) {
+function MemoryDomainChip({
+  domain,
+  showKind = true,
+  showName = true,
+  className
+}) {
   const localize = useLocalize();
   const kindLabel = localize(MEMORY_DOMAIN_KIND_LABEL_KEYS[domain.kind]);
   return /* @__PURE__ */ h(
@@ -1514,7 +1620,7 @@ function MemoryUsageBadge({
   const localize = useLocalize();
   const tokenLabel = localize("com_ui_tokens");
   const current = tooltipCurrent ?? totalTokens;
-  const max = tooltipMax ?? tokenLimit;
+  const max = tooltipMax ?? tokenLimit ?? 0;
   const tooltipText = current !== void 0 ? `${current.toLocaleString()} / ${max.toLocaleString()} ${tokenLabel}` : `${max.toLocaleString()} ${tokenLabel}`;
   return /* @__PURE__ */ h(
     TooltipAnchor,
@@ -1837,15 +1943,16 @@ function MemoryEditDialog({
     },
     onError: (error) => {
       let errorMessage = localize("com_ui_error");
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error;
-        if (axiosError.response?.data?.error) {
-          errorMessage = axiosError.response.data.error;
-          if (axiosError.response?.status === 409 || errorMessage.includes("already exists")) {
+      if (typeof error === "object" && "response" in error) {
+        const failure = error;
+        const responseMessage = failure.response?.data?.error;
+        if (responseMessage) {
+          errorMessage = responseMessage;
+          if (failure.response?.status === 409 || responseMessage.includes("already exists")) {
             errorMessage = localize("com_ui_memory_key_exists");
-          } else if (errorMessage.includes("lowercase letters, numbers, and underscores")) {
+          } else if (responseMessage.includes("lowercase letters, numbers, and underscores")) {
             errorMessage = localize("com_ui_memory_key_validation");
-          } else if (errorMessage.includes("stable")) {
+          } else if (responseMessage.includes("stable")) {
             errorMessage = localize("com_ui_memory_stable_guard");
           }
         }
@@ -2027,7 +2134,11 @@ function MemoryEditDialog({
 
 // client/src/components/MemoryCardActions.tsx
 var Pencil3 = makeIcon("pencil");
-function MemoryCardActions({ memory, storeId, readOnly = false }) {
+function MemoryCardActions({
+  memory,
+  storeId,
+  readOnly = false
+}) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
   const [editOpen, setEditOpen] = useState(false);
@@ -2126,7 +2237,13 @@ function MemoryCardActions({ memory, storeId, readOnly = false }) {
 }
 
 // client/src/components/DialogImage.tsx
-function DialogImage({ isOpen, onOpenChange, src, downloadImage, alt }) {
+function DialogImage({
+  isOpen,
+  onOpenChange,
+  src,
+  downloadImage,
+  alt
+}) {
   const localize = useLocalize();
   return /* @__PURE__ */ h(OGDialog, { open: isOpen, onOpenChange }, /* @__PURE__ */ h(OGDialogContent, { className: "max-w-[90vw] p-3", showCloseButton: true }, /* @__PURE__ */ h("img", { src, alt: alt ?? "", className: "max-h-[78vh] w-full rounded-lg object-contain" }), /* @__PURE__ */ h("div", { className: "flex justify-end pt-2" }, /* @__PURE__ */ h(
     "button",
@@ -2256,7 +2373,10 @@ function MemoryList({
   domainsById
 }) {
   const localize = useLocalize();
-  const getItemKey = useCallback((memory) => `${memory.storeId ?? ""}:${memory.key}`, []);
+  const getItemKey = useCallback(
+    (memory) => `${memory.storeId ?? ""}:${memory.key}`,
+    []
+  );
   const renderMemory = useCallback(
     (memory) => {
       const domain = memory.domainId != null ? domainsById?.get(memory.domainId) ?? null : null;
@@ -3146,11 +3266,11 @@ function MemoryInfo({ memoryArtifacts }) {
         const errorData = JSON.parse(artifact.value);
         if (errorData.errorType === "already_exceeded") {
           return localize("com_ui_memory_already_exceeded", {
-            tokens: errorData.tokenCount
+            tokens: errorData.tokenCount ?? 0
           });
         } else if (errorData.errorType === "would_exceed") {
           return localize("com_ui_memory_would_exceed", {
-            tokens: errorData.tokenCount
+            tokens: errorData.tokenCount ?? 0
           });
         } else {
           return localize("com_ui_memory_error");
@@ -3181,16 +3301,15 @@ function MemoryInfo({ memoryArtifacts }) {
   )))), updatedMemories.length > 0 && /* @__PURE__ */ h("div", null, /* @__PURE__ */ h("h4", { className: "mb-2 text-sm font-semibold text-text-primary" }, localize("com_ui_memory_updated_items")), /* @__PURE__ */ h("div", { className: "space-y-2" }, updatedMemories.map((artifact) => /* @__PURE__ */ h("div", { key: `update-${artifact.key}`, className: "rounded-lg p-3" }, /* @__PURE__ */ h("div", { className: "mb-1 text-xs font-medium uppercase tracking-wide text-text-secondary" }, artifact.key), /* @__PURE__ */ h("div", { className: "whitespace-pre-wrap text-sm text-text-primary" }, artifact.content ?? artifact.value), /* @__PURE__ */ h(MemoryDomainAndTags, { artifact }))))), deletedMemories.length > 0 && /* @__PURE__ */ h("div", null, /* @__PURE__ */ h("h4", { className: "mb-2 text-sm font-semibold text-text-primary" }, localize("com_ui_memory_deleted_items")), /* @__PURE__ */ h("div", { className: "space-y-2" }, deletedMemories.map((artifact) => /* @__PURE__ */ h("div", { key: `delete-${artifact.key}`, className: "rounded-lg p-3 opacity-60" }, /* @__PURE__ */ h("div", { className: "mb-1 text-xs font-medium uppercase tracking-wide text-text-secondary" }, artifact.key), /* @__PURE__ */ h("div", { className: "text-sm italic text-text-secondary" }, localize("com_ui_memory_deleted")))))), errorMessages.length > 0 && /* @__PURE__ */ h("div", null, /* @__PURE__ */ h("h4", { className: "mb-2 text-sm font-semibold text-text-destructive" }, localize("com_ui_memory_storage_full")), /* @__PURE__ */ h("div", { className: "space-y-2" }, errorMessages.map((errorMessage) => /* @__PURE__ */ h(Alert, { key: errorMessage, variant: "error", icon: false, className: "rounded-md p-3" }, errorMessage)))));
 }
 
-// client/src/hooks.js
+// client/src/hooks.ts
 var BOUNDED_BODY_CLASS = "max-h-[40dvh] overflow-x-hidden overflow-y-auto [contain:paint]";
-function useBoundedBody() {
+function useBoundedBody(_options = {}) {
   const bodyRef = useRef(null);
   return { bodyRef, bodyStyle: void 0, onScroll: () => {
   } };
 }
 
 // client/src/components/MemoryArtifacts.tsx
-var Tools = { memory: "memory" };
 function MemoryArtifacts({ attachments }) {
   const localize = useLocalize();
   const [showInfo, setShowInfo] = useState(false);
@@ -3203,9 +3322,10 @@ function MemoryArtifacts({ attachments }) {
       return { hasErrors: hasErrors2, memoryArtifacts: result };
     }
     for (const attachment of attachments) {
-      if (attachment?.[Tools.memory] != null) {
-        result.push(attachment[Tools.memory]);
-        if (!hasErrors2 && attachment[Tools.memory].type === "error") {
+      const artifact = attachment?.memory;
+      if (artifact != null) {
+        result.push(artifact);
+        if (!hasErrors2 && artifact.type === "error") {
           hasErrors2 = true;
         }
       }
@@ -3293,11 +3413,10 @@ function MemoryArtifacts({ attachments }) {
   ))));
 }
 
-// client/src/index.js
+// client/src/index.ts
 var inject = ["ui", "app-ui", "i18n"];
 function activate(api) {
   const { React } = api;
-  const h2 = React.createElement;
   const { useState: useState2 } = React;
   const ui = api.consume("ui");
   const appUi = api.consume("app-ui");
@@ -3305,31 +3424,39 @@ function activate(api) {
   if (ui == null) {
     throw new Error("memory plugin requires the ui service");
   }
+  const hostUi = ui;
   if (i18n == null) {
     throw new Error("memory plugin requires the i18n service");
   }
-  for (const name of ["GenericGrantAccessDialog", "useAuthContext", "useExpandCollapse", "useHasAccess", "useToastContext"]) {
+  const requiredAppUi = [
+    "GenericGrantAccessDialog",
+    "useAuthContext",
+    "useExpandCollapse",
+    "useHasAccess",
+    "useToastContext"
+  ];
+  for (const name of requiredAppUi) {
     if (appUi?.[name] == null) {
       throw new Error(`memory plugin requires app-ui.${name}`);
     }
   }
-  const translator = i18n.scope("memory", memoryCatalogs);
-  configure(api, ui, translator, appUi);
+  const translator = i18n.forScope(memoryCatalogs);
+  configure(api, hostUi, translator, appUi);
   const t2 = translator.t;
   const STORE_TAG_CLASS = "shrink-0 rounded-full border border-border-heavy bg-surface-tertiary px-2 py-0.5 text-xs font-medium text-text-primary";
   const STORE_OWNER_TAG_CLASS = "shrink-0 rounded-full border border-status-success-border bg-status-success-subtle px-2 py-0.5 text-xs font-medium text-status-success";
   function storeTag(store) {
     if (store.isDefault && store.isOwner) {
-      return h2("span", { key: "default", className: STORE_TAG_CLASS }, t2("settings.storeDefault"));
+      return h("span", { key: "default", className: STORE_TAG_CLASS }, t2("settings.storeDefault"));
     }
     if (!store.isOwner && store.ownerName) {
-      return h2("span", { key: "owner", className: STORE_OWNER_TAG_CLASS }, store.ownerName);
+      return h("span", { key: "owner", className: STORE_OWNER_TAG_CLASS }, store.ownerName);
     }
     return void 0;
   }
   function AgentMemorySettings(props) {
     translator.useLocale();
-    const { Switch: Switch2, ControlCombobox: ControlCombobox2, MultiSelect: MultiSelect2, Label: Label2 } = ui;
+    const { Switch: Switch2, ControlCombobox: ControlCombobox2, MultiSelect: MultiSelect2, Label: Label2 } = hostUi;
     const { data: storesData } = useRpc("memories.stores", {});
     const storeId = typeof props.memoryStore === "string" && props.memoryStore !== "" ? props.memoryStore : void 0;
     const { data: domainsData } = useRpc(
@@ -3338,11 +3465,13 @@ function activate(api) {
       storeId != null
     );
     const stores = storesData?.stores ?? props.stores ?? [];
-    const domains = (domainsData?.domains ?? props.domains ?? []).map((domain) => ({
-      ...domain,
-      kindLabel: t2(`com_ui_memory_domain_kind_${domain.kind}`),
-      isNonReal: ["fictional", "sandbox", "study"].includes(domain.kind)
-    }));
+    const domains = (domainsData?.domains ?? props.domains ?? []).map(
+      (domain) => ({
+        ...domain,
+        kindLabel: t2(`com_ui_memory_domain_kind_${domain.kind}`),
+        isNonReal: ["fictional", "sandbox", "study"].includes(domain.kind)
+      })
+    );
     const selected = stores.find((store) => store.id === props.memoryStore);
     const storeItems = stores.map((store) => ({
       label: store.name,
@@ -3355,9 +3484,9 @@ function activate(api) {
       value: domain.id
     }));
     const domainNameOf = (id) => domains.find((domain) => domain.id === id)?.name ?? id;
-    return h2("div", { className: "mb-3" }, [
-      h2("div", { key: "row", className: "mb-1 flex items-center justify-between gap-2" }, [
-        h2(
+    return h("div", { className: "mb-3" }, [
+      h("div", { key: "row", className: "mb-1 flex items-center justify-between gap-2" }, [
+        h(
           Label2,
           {
             key: "label",
@@ -3366,7 +3495,7 @@ function activate(api) {
           },
           t2("settings.useMemory")
         ),
-        h2(Switch2, {
+        h(Switch2, {
           key: "switch",
           id: "use-memory-switch",
           checked: props.useMemory !== false,
@@ -3374,13 +3503,13 @@ function activate(api) {
           "aria-label": t2("settings.useMemory")
         })
       ]),
-      h2(
+      h(
         "p",
         { key: "info", className: "text-xs leading-relaxed text-text-secondary" },
         t2("settings.useMemoryInfo")
       ),
-      props.useMemory !== false ? h2("div", { key: "store", className: "mt-2 flex flex-col" }, [
-        h2(ControlCombobox2, {
+      props.useMemory !== false ? h("div", { key: "store", className: "mt-2 flex flex-col" }, [
+        h(ControlCombobox2, {
           key: "combobox",
           isCollapsed: false,
           ariaLabel: t2("settings.store"),
@@ -3397,13 +3526,13 @@ function activate(api) {
           iconClassName: "h-auto w-auto gap-1 overflow-visible rounded-none",
           SelectIcon: selected ? storeTag(selected) : void 0
         }),
-        h2(
+        h(
           "p",
           { key: "hint", className: "mt-1 text-xs leading-relaxed text-text-secondary" },
           t2("settings.storeRequired")
         ),
-        domainItems.length > 1 ? h2("div", { key: "domains", className: "mt-2 flex flex-col" }, [
-          h2(MultiSelect2, {
+        domainItems.length > 1 ? h("div", { key: "domains", className: "mt-2 flex flex-col" }, [
+          h(MultiSelect2, {
             key: "multiselect",
             items: domainItems,
             selectedValues: props.memoryDomains ?? [],
@@ -3417,7 +3546,7 @@ function activate(api) {
             labelClassName: "mb-1 block text-[11px] font-medium uppercase tracking-wide text-text-secondary",
             popoverClassName: "!min-w-max max-w-[min(90vw,40rem)]"
           }),
-          h2(
+          h(
             "p",
             {
               key: "domain-hint",
@@ -3430,7 +3559,7 @@ function activate(api) {
     ]);
   }
   function MemoryArtifactIcon(props) {
-    return h2(
+    return h(
       "svg",
       {
         width: 20,
@@ -3443,17 +3572,17 @@ function activate(api) {
         ...props
       },
       [
-        h2("path", {
+        h("path", {
           key: "a",
           d: "M6 3C4.89543 3 4 3.89543 4 5V13C4 14.1046 4.89543 15 6 15L6 3Z",
           fill: "currentColor"
         }),
-        h2("path", {
+        h("path", {
           key: "b",
           d: "M7 3V15H8.18037L8.4899 13.4523C8.54798 13.1619 8.69071 12.8952 8.90012 12.6858L12.2931 9.29289C12.7644 8.82153 13.3822 8.58583 14 8.58578V3.5C14 3.22386 13.7761 3 13.5 3H7Z",
           fill: "currentColor"
         }),
-        h2("path", {
+        h("path", {
           key: "c",
           d: "M11.3512 15.5297L9.73505 15.8529C9.38519 15.9229 9.07673 15.6144 9.14671 15.2646L9.46993 13.6484C9.48929 13.5517 9.53687 13.4628 9.60667 13.393L12.9996 10C13.5519 9.44771 14.4473 9.44771 14.9996 10C15.5519 10.5523 15.5519 11.4477 14.9996 12L11.6067 15.393C11.5369 15.4628 11.448 15.5103 11.3512 15.5297Z",
           fill: "currentColor"
@@ -3467,8 +3596,8 @@ function activate(api) {
     if (!props.conversationId) {
       return null;
     }
-    return h2(React.Fragment, null, [
-      h2(
+    return h(React.Fragment, null, [
+      h(
         "button",
         {
           key: "button",
@@ -3478,9 +3607,9 @@ function activate(api) {
           onClick: () => setOpen(true),
           className: "inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-border-light bg-presentation/75 text-text-primary backdrop-blur-xl transition-all ease-in-out hover:bg-surface-tertiary"
         },
-        h2(api.icons.database, { key: "icon", className: "size-[18px]", "aria-hidden": true })
+        h(api.icons.database, { key: "icon", className: "size-[18px]", "aria-hidden": true })
       ),
-      open ? h2(MemoryScopeDialog, {
+      open ? h(MemoryScopeDialog, {
         key: "dialog",
         open: true,
         conversationId: props.conversationId,
@@ -3491,7 +3620,12 @@ function activate(api) {
   api.ui.register("chat.header.actions", HeaderMemoryButton);
   api.ui.register("agent.settings.memory", AgentMemorySettings);
   api.ui.register("chat.message.cards", MemoryArtifacts);
-  api.ui.panel({ id: "memories", title: () => t2("navTitle"), icon: "database", component: MemoryPanel });
+  api.ui.panel({
+    id: "memories",
+    title: () => t2("navTitle"),
+    icon: "database",
+    component: MemoryPanel
+  });
 }
 export {
   activate as default,

@@ -31,13 +31,13 @@
 
 ## 核心概念
 
-| 概念 | 含义 |
-|---|---|
-| store | 记忆库，用户或 agent 的隔离单元 |
-| domain | store 内的语境分区，如现实/虚构/项目 |
-| entry | 一条记忆，key + value + tags + 状态 |
-| stable | 进入系统基线的长期记忆 |
-| ephemeral | 按 turn 召回的事件性记忆 |
-| extraction | 从对话中写入/更新记忆 |
-| recall | 按当前 turn 找出相关 ephemeral 记忆 |
-| injection | 把 stable/recall 结果放进 prompt |
+| 概念       | 含义                                 |
+| ---------- | ------------------------------------ |
+| store      | 记忆库，用户或 agent 的隔离单元      |
+| domain     | store 内的语境分区，如现实/虚构/项目 |
+| entry      | 一条记忆，key + value + tags + 状态  |
+| stable     | 进入系统基线的长期记忆               |
+| ephemeral  | 按 turn 召回的事件性记忆             |
+| extraction | 从对话中写入/更新记忆                |
+| recall     | 按当前 turn 找出相关 ephemeral 记忆  |
+| injection  | 把 stable/recall 结果放进 prompt     |

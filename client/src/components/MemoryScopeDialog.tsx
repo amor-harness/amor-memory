@@ -198,7 +198,7 @@ export default function MemoryScopeDialog({
       rows.push(memory);
       groups.set(key, rows);
     }
-    const order = new Map(domains.map((domain, index) => [domain.id, index]));
+    const order = new Map(domains.map((domain, index): [string, number] => [domain.id, index]));
     const rank = (domainId: string) =>
       domainId === '' ? Number.MAX_SAFE_INTEGER : (order.get(domainId) ?? domains.length);
     return [...groups.entries()].sort(([a], [b]) => rank(a) - rank(b));

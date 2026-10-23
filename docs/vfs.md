@@ -35,15 +35,15 @@ memory 系统挂载 `/memory` provider，负责全部路径语义：
 
 provider 实现：
 
-| 操作 | 语义 |
-|---|---|
-| `list` | 列出 domain 文件夹、记忆文件、INDEX、EXTRACTION |
-| `read` | 读取记忆、INDEX 或 EXTRACTION |
-| `write` | 创建/更新记忆，或写 EXTRACTION |
-| `delete` | 删除记忆或清空 EXTRACTION |
-| `move` | 同 domain 重命名，跨 domain 改 domainId |
-| `search` | 内容匹配，返回 `path:line:text` |
-| `glob` | 路径 glob |
+| 操作     | 语义                                            |
+| -------- | ----------------------------------------------- |
+| `list`   | 列出 domain 文件夹、记忆文件、INDEX、EXTRACTION |
+| `read`   | 读取记忆、INDEX 或 EXTRACTION                   |
+| `write`  | 创建/更新记忆，或写 EXTRACTION                  |
+| `delete` | 删除记忆或清空 EXTRACTION                       |
+| `move`   | 同 domain 重命名，跨 domain 改 domainId         |
+| `search` | 内容匹配，返回 `path:line:text`                 |
+| `glob`   | 路径 glob                                       |
 
 ## 4. `INDEX.yaml`
 

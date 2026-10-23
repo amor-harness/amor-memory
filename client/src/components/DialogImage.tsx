@@ -1,8 +1,24 @@
 import { h, Fragment } from '../runtime.js';
 import { OGDialog, OGDialogContent, useLocalize } from '../runtime.js';
+import type { RefObject } from '../runtime.js';
+
+interface DialogImageProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  src: string;
+  downloadImage: () => void;
+  alt?: string;
+  triggerRef?: RefObject<HTMLButtonElement>;
+}
 
 /** The card's image preview: full-size picture plus a download action. */
-export default function DialogImage({ isOpen, onOpenChange, src, downloadImage, alt }) {
+export default function DialogImage({
+  isOpen,
+  onOpenChange,
+  src,
+  downloadImage,
+  alt,
+}: DialogImageProps) {
   const localize = useLocalize();
   return (
     <OGDialog open={isOpen} onOpenChange={onOpenChange}>

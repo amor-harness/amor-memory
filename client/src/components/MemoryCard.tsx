@@ -7,6 +7,7 @@ import { useVFSImageSrcQuery } from '../data.js';
 import MemoryCardActions from './MemoryCardActions.tsx';
 import MemoryDomainChip from './MemoryDomainChip.tsx';
 import DialogImage from './DialogImage.tsx';
+import type { TMemoryDomain, TUserMemory } from '../sdk.js';
 
 const Lock = makeIcon('lock');
 
@@ -15,12 +16,20 @@ const STATUS_CHIP_CLASS =
 
 const CARD_SURFACE_CLASS = 'bg-surface-secondary/50 hover:bg-surface-hover';
 
-const formatDate = (dateString) =>
+const formatDate = (dateString: string): string =>
   new Date(dateString).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
+
+interface MemoryCardProps {
+  memory: TUserMemory;
+  hasUpdateAccess: boolean;
+  storeId?: string;
+  readOnly?: boolean;
+  domain?: TMemoryDomain | null;
+}
 
 export default function MemoryCard({
   memory,
@@ -28,11 +37,11 @@ export default function MemoryCard({
   storeId,
   readOnly = false,
   domain = null,
-}) {
+}: MemoryCardProps) {
   const localize = useLocalize();
   const isImage = memory.kind === 'image';
   const [previewOpen, setPreviewOpen] = useState(false);
-  const triggerRef = useRef(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { data: imageSrc, isLoading: isImageLoading } = useVFSImageSrcQuery(
     isImage ? memory.sha256 : null,
   );

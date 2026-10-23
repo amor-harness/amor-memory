@@ -10,8 +10,8 @@ let models;
 before(async () => {
   server = await MongoMemoryServer.create();
   process.env.MONGO_URI = server.getUri();
-  ({ attachmentsFromWrites } = await import('../extraction/processor.mjs'));
-  ({ models } = await import('../db.mjs'));
+  ({ attachmentsFromWrites } = await import('../dist/extraction/processor.mjs'));
+  ({ models } = await import('../dist/db.mjs'));
 });
 
 after(async () => {

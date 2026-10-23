@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as memory from '../extraction/index.mjs';
+import * as memory from '../dist/extraction/index.mjs';
 
 function baseArgs(overrides = {}) {
   return {

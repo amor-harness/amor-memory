@@ -1,15 +1,13 @@
 import { h, Fragment } from '../runtime.js';
-import {
-  AdminSettingsDialog,
-  PanelFooter,
-  useLocalize,
-} from '../runtime.js';
+import { AdminSettingsDialog, PanelFooter, useLocalize } from '../runtime.js';
 import { Permissions, PermissionTypes } from '../sdk.js';
+import type { Permission } from '../sdk.js';
 import { useRpc, useUpdateMemoryPermissionsMutation } from '../data.js';
+import type { AdminPermissionsResult } from '../data.js';
 
 /** Admins tune the per-role memory capabilities. "Use memories" is a global
  *  feature gate, so it is deliberately not repeated here. */
-const permissions = [
+const permissions: Array<{ permission: Permission; labelKey: string }> = [
   { permission: Permissions.CREATE, labelKey: 'com_ui_memories_allow_create' },
   { permission: Permissions.UPDATE, labelKey: 'com_ui_memories_allow_update' },
   { permission: Permissions.READ, labelKey: 'com_ui_memories_allow_read' },
@@ -18,7 +16,7 @@ const permissions = [
 
 export default function AdminSettings() {
   const localize = useLocalize();
-  const { data, isLoading, isError } = useRpc('memories.permissions', {});
+  const { data, isLoading, isError } = useRpc<AdminPermissionsResult>('memories.permissions', {});
   const mutation = useUpdateMemoryPermissionsMutation({
     onSuccess: () => {},
     onError: () => {},

@@ -8,6 +8,12 @@ import { useVFSImageSrcQuery, useMemoryDomainsQuery } from '../data.js';
 import { extensionForMime } from '../utils.js';
 import { useLocalize } from '../runtime.js';
 
+/** The JSON an error artifact's value carries. */
+interface MemoryErrorPayload {
+  errorType?: string;
+  tokenCount?: number;
+}
+
 /** When a picture entered memory, in the reader's own date/time format. */
 function formatStoredAt(value: string): string | null {
   const date = new Date(value);
@@ -169,15 +175,15 @@ export default function MemoryInfo({ memoryArtifacts }: { memoryArtifacts: Memor
 
     const messages = errors.map((artifact) => {
       try {
-        const errorData = JSON.parse(artifact.value as string);
+        const errorData = JSON.parse(artifact.value as string) as MemoryErrorPayload;
 
         if (errorData.errorType === 'already_exceeded') {
           return localize('com_ui_memory_already_exceeded', {
-            tokens: errorData.tokenCount,
+            tokens: errorData.tokenCount ?? 0,
           });
         } else if (errorData.errorType === 'would_exceed') {
           return localize('com_ui_memory_would_exceed', {
-            tokens: errorData.tokenCount,
+            tokens: errorData.tokenCount ?? 0,
           });
         } else {
           return localize('com_ui_memory_error');

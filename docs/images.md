@@ -105,7 +105,7 @@ userId, data(base64), mimeType, source, origin, storeId, agentId
 tool callback 传 URL：
 
 ```js
-memory.image.ingest({ userId, url, source: 'tool', origin })
+memory.image.ingest({ userId, url, source: 'tool', origin });
 ```
 
 ### 手动删除
@@ -125,10 +125,10 @@ memory.image.ingest({ userId, url, source: 'tool', origin })
 
 ## 9. 失败策略
 
-| 失败点 | 行为 |
-|---|---|
-| 格式无法解析 | skip |
-| 太小/太大 | skip |
-| 无可用 store | skip |
+| 失败点           | 行为                       |
+| ---------------- | -------------------------- |
+| 格式无法解析     | skip                       |
+| 太小/太大        | skip                       |
+| 无可用 store     | skip                       |
 | embedding 不可用 | 图片入库，`embedded:false` |
-| 向量写入失败 | 图片入库，后续可重试 |
+| 向量写入失败     | 图片入库，后续可重试       |

@@ -71,11 +71,11 @@ Authorization: Bearer <MEMORY_EMBED_TOKEN>   # 可选
 
 ### 超时
 
-| 用途 | 配置 | 默认 |
-|---|---|---|
-| 文本 embedding | `MEMORY_EMBED_TIMEOUT_MS` | 30000 |
+| 用途           | 配置                           | 默认  |
+| -------------- | ------------------------------ | ----- |
+| 文本 embedding | `MEMORY_EMBED_TIMEOUT_MS`      | 30000 |
 | 图片文本 query | `MEMORY_IMAGE_TEXT_TIMEOUT_MS` | 15000 |
-| 图片 embedding | `MEMORY_IMAGE_TIMEOUT_MS` | 60000 |
+| 图片 embedding | `MEMORY_IMAGE_TIMEOUT_MS`      | 60000 |
 
 超时或 HTTP 非 2xx：
 
@@ -84,11 +84,11 @@ Authorization: Bearer <MEMORY_EMBED_TOKEN>   # 可选
 
 ### 认证与代理
 
-| 变量 | 作用 |
-|---|---|
-| `MEMORY_EMBED_TOKEN` | 加 `Authorization: Bearer ...` |
-| `MEMORY_EMBED_PROXY` | 通过 HTTP 代理访问 |
-| `MEMORY_EMBED_URL` | 服务根地址，不含 `/v1` |
+| 变量                 | 作用                                         |
+| -------------------- | -------------------------------------------- |
+| `MEMORY_EMBED_TOKEN` | 加 `Authorization: Bearer ...`               |
+| `MEMORY_EMBED_PROXY` | 通过 HTTP 代理访问                           |
+| `MEMORY_EMBED_URL`   | 服务根地址，不含 `/v1`                       |
 | `MEMORY_EMBED_MODEL` | 模型名，默认 `jina-embeddings-v5-omni-small` |
 
 ## 2. Rerank 服务
@@ -133,8 +133,8 @@ Authorization: Bearer <MEMORY_RERANK_TOKEN>   # 可选
 
 ### 超时
 
-| 配置 | 默认 |
-|---|---|
+| 配置                    | 默认  |
+| ----------------------- | ----- |
 | `MEMORY_RERANK_TIMEOUT` | 15000 |
 
 失败、超时、分数不完整：
@@ -145,11 +145,11 @@ Authorization: Bearer <MEMORY_RERANK_TOKEN>   # 可选
 
 ### 认证与代理
 
-| 变量 | 作用 |
-|---|---|
-| `MEMORY_RERANK_TOKEN` | Bearer token |
-| `MEMORY_RERANK_PROXY` | HTTP 代理 |
-| `MEMORY_RERANK_URL` | 服务根地址，不含 `/v1` |
+| 变量                  | 作用                      |
+| --------------------- | ------------------------- |
+| `MEMORY_RERANK_TOKEN` | Bearer token              |
+| `MEMORY_RERANK_PROXY` | HTTP 代理                 |
+| `MEMORY_RERANK_URL`   | 服务根地址，不含 `/v1`    |
 | `MEMORY_RERANK_MODEL` | 默认 `jina-reranker-v3.5` |
 
 ## 3. PostgreSQL / pgvector

@@ -28,25 +28,22 @@
     "plugin.json",
     "config.example.json",
     "README.md",
+    "README.en.md",
     "docs/",
-    "runtime/index.mjs",
-    "runtime/db.mjs",
-    "runtime/db/*.mjs",
-    "runtime/backend/",
-    "runtime/recall/",
-    "runtime/extraction/",
-    "runtime/domain/",
-    "runtime/vfs/",
-    "client/dist/index.mjs",
-    "README.en.md"
+    "runtime/dist/",
+    "client/dist/index.mjs"
   ],
   "scripts": {
-    "build": "esbuild client/src/index.js --bundle --format=esm --outfile=client/dist/index.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning",
+    "build": "npm run build:runtime && npm run build:client",
     "watch": "npm run build -- --watch",
-    "build:test": "esbuild client/test/entry.jsx --bundle --format=esm --outfile=client/.test/bundle.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning",
+    "build:test": "esbuild client/test/entry.ts --bundle --format=esm --outfile=client/.test/bundle.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning",
     "pretest": "npm run build && npm run build:test",
     "test": "node client/test/render.mjs && node client/test/interaction.mjs && node client/test/scope.mjs && npm run test:runtime",
-    "test:runtime": "node --test runtime/test/*.test.mjs"
+    "test:runtime": "node --test runtime/test/*.test.mjs",
+    "build:runtime": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:client": "tsc -p tsconfig.client.json",
+    "build:client": "esbuild client/src/index.ts --bundle --format=esm --outfile=client/dist/index.mjs --jsx-factory=h --jsx-fragment=Fragment --target=es2020 --log-level=warning"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
@@ -57,19 +54,9 @@
     "url": "https://github.com/amor-harness"
   },
   "peerDependencies": {
+    "@amor-harness/agent-runtime": "^0.1.0",
     "@amor-harness/database": "^0.1.0",
-    "@amor-harness/permissions": "^0.1.0",
-    "@amor-harness/agent-runtime": "^0.1.0"
-  },
-  "peerDependenciesMeta": {
-    "@amor-harness/database": {
-      "optional": true
-    },
-    "@amor-harness/permissions": {
-      "optional": true
-    },
-    "@amor-harness/agent-runtime": {
-      "optional": true
-    }
+    "@amor-harness/i18n": "^0.1.0",
+    "@amor-harness/permissions": "^0.1.0"
   }
 }

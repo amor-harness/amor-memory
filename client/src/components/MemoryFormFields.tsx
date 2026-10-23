@@ -8,7 +8,7 @@ import {
   Switch,
   Textarea,
 } from '../runtime.js';
-import type { MemoryInjection, TMemoryDomain } from '../sdk.js';
+import type { MemoryInjection, OptionWithIcon, TMemoryDomain } from '../sdk.js';
 import type React from '../runtime.js';
 
 import type { TranslationKeys } from '../runtime.js';

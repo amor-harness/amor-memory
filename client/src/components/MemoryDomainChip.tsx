@@ -1,16 +1,26 @@
 import { h, Fragment } from '../runtime.js';
 import { cn, makeIcon, useLocalize } from '../runtime.js';
-import {
-  MEMORY_DOMAIN_KIND_LABEL_KEYS,
-  domainKindBadgeColor,
-} from '../constants.js';
+import { MEMORY_DOMAIN_KIND_LABEL_KEYS, domainKindBadgeColor } from '../constants.js';
+import type { TMemoryDomain } from '../sdk.js';
 
 const Database = makeIcon('database');
 
 const CHIP_CLASS =
   'inline-flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium';
 
-export default function MemoryDomainChip({ domain, showKind = true, showName = true, className }) {
+interface MemoryDomainChipProps {
+  domain: TMemoryDomain;
+  showKind?: boolean;
+  showName?: boolean;
+  className?: string;
+}
+
+export default function MemoryDomainChip({
+  domain,
+  showKind = true,
+  showName = true,
+  className,
+}: MemoryDomainChipProps) {
   const localize = useLocalize();
   const kindLabel = localize(MEMORY_DOMAIN_KIND_LABEL_KEYS[domain.kind]);
 
