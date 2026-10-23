@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { models } from '../db.mjs';
-import { ownedStore, requirePermission } from './memories.mjs';
+import { readableStore, requirePermission } from './memories.mjs';
 
 const serialiseVersion = (version) => ({
   id: String(version._id),
@@ -18,12 +18,13 @@ const serialiseVersion = (version) => ({
 /** One memory's recorded history, newest first. */
 export async function listVersions({ userId, role, storeId, key }) {
   await requirePermission({ userId, role, permissions: ['USE', 'READ'] });
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await readableStore({ userId, storeId });
+  if (!access) {
     return { error: 404 };
   }
+  const store = access.store;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(access.ownerId));
   const entry = await db.MemoryEntry.findOne({ userId: user, storeId: String(store._id), key }).lean();
   if (!entry) {
     return { error: 404 };

@@ -72,12 +72,13 @@ export async function ownedStore({ userId, storeId }) {
 /** One store's entries, shaped like the memory list RPC returns. */
 export async function listOwnedMemories({ userId, role, storeId }) {
   await requirePermission({ userId, role, permissions: ['USE', 'READ'] });
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await readableStore({ userId, storeId });
+  if (!access) {
     return { error: 404 };
   }
+  const store = access.store;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(access.ownerId));
   const rows = await db.MemoryEntry.find({ userId: user, storeId: String(store._id) })
     .sort({ updated_at: -1 })
     .lean();
@@ -99,9 +100,10 @@ export async function listOwnedMemories({ userId, role, storeId }) {
       ...(entry.lastRecalledAt ? { lastRecalledAt: entry.lastRecalledAt } : {}),
     };
   });
+  const writable = access.isOwner || (await writableStore({ userId, storeId: String(store._id) })) != null;
   return {
     storeId: String(store._id),
-    canWrite: true,
+    canWrite: writable,
     memories,
     totalTokens,
   };

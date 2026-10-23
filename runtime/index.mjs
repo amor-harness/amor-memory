@@ -486,27 +486,35 @@ export default {
     });
     /** A plugin can add to the system prompt (`stableContext`) and/or the
      *  dynamic `additional_instructions` tail (`dynamicContext`). */
-    ctx.kernel.expose('memory.store.resolve', async (params) => resolveStore(params ?? {}));
-    ctx.kernel.expose('memory.store.default', async (params) => defaultStore(params ?? {}));
-    ctx.kernel.expose('memory.formatted', async (params) => formattedMemories(params ?? {}));
-    ctx.kernel.expose('memory.domain.scope', async (params) => domainScope(params ?? {}));
+    ctx.kernel.expose('memory.store.resolve', async (params, meta) =>
+      resolveStore({ ...(params ?? {}), userId: meta?.userId }),
+    );
+    ctx.kernel.expose('memory.store.default', async (_params, meta) =>
+      defaultStore({ userId: meta?.userId }),
+    );
+    ctx.kernel.expose('memory.formatted', async (params, meta) =>
+      formattedMemories({ ...(params ?? {}), userId: meta?.userId }),
+    );
+    ctx.kernel.expose('memory.domain.scope', async (params, meta) =>
+      domainScope({ ...(params ?? {}), userId: meta?.userId }),
+    );
     ctx.kernel.expose('memory.vfs.list', async (params, meta) =>
-      vfsList({ ...(params ?? {}), userId: params?.userId ?? meta?.userId }),
+      vfsList({ ...(params ?? {}), userId: meta?.userId }),
     );
     ctx.kernel.expose('memory.vfs.domains', async (params, meta) =>
-      vfsDomains({ ...(params ?? {}), userId: params?.userId ?? meta?.userId }),
+      vfsDomains({ ...(params ?? {}), userId: meta?.userId }),
     );
     ctx.kernel.expose('memory.vfs.set', async (params, meta) =>
-      vfsSet({ ...(params ?? {}), userId: params?.userId ?? meta?.userId }),
+      vfsSet({ ...(params ?? {}), userId: meta?.userId }),
     );
     ctx.kernel.expose('memory.vfs.delete', async (params, meta) =>
-      vfsDelete({ ...(params ?? {}), userId: params?.userId ?? meta?.userId }),
+      vfsDelete({ ...(params ?? {}), userId: meta?.userId }),
     );
     ctx.kernel.expose('memory.vfs.provider', async (params) =>
       handleProviderOperation(params ?? {}),
     );
     ctx.kernel.expose('memory.vfs.image', async (params, meta) =>
-      vfsImage({ ...(params ?? {}), userId: params?.userId ?? meta?.userId }),
+      vfsImage({ ...(params ?? {}), userId: meta?.userId }),
     );
     const registeredHooks = [];
     let hookError = null;
@@ -728,7 +736,7 @@ export default {
       hookError = error instanceof Error ? error.message : String(error);
     }
     ctx.kernel.expose('memory.image.ingest', async (params, meta) => {
-      const userId = params?.userId ?? meta?.userId;
+      const userId = meta?.userId;
       if (params?.url != null) {
         return ingestImageUrl({ ...params, userId });
       }

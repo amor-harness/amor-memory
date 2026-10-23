@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { models } from '../db.mjs';
-import { ownedStore, requirePermission, stripTags, tagsOf } from './memories.mjs';
+import { readableStore, requirePermission, stripTags, tagsOf } from './memories.mjs';
 
 /** The conversation's memory links joined with their entries, newest first. */
 export async function listConversationMemories({ userId, role, storeId, conversationId }) {
@@ -8,12 +8,13 @@ export async function listConversationMemories({ userId, role, storeId, conversa
   if (!conversationId) {
     throw Object.assign(new Error('conversationId is required.'), { status: 400 });
   }
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await readableStore({ userId, storeId });
+  if (!access) {
     return { error: 404 };
   }
+  const store = access.store;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(access.ownerId));
   const links = await db.ConversationMemory.find({
     userId: user,
     conversationId,

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { connectAppDb, models } from '../db.mjs';
-import { ownedStore, requirePermission } from './memories.mjs';
+import { readableStore, requirePermission, writableStore } from './memories.mjs';
 
 const toClientDomain = (domain) => ({
   id: String(domain._id),
@@ -16,12 +16,13 @@ const toClientDomain = (domain) => ({
 /** A store's domains plus the active set of a conversation, when named. */
 export async function listDomains({ userId, role, storeId, conversationId }) {
   await requirePermission({ userId, role, permissions: ['USE', 'READ'] });
-  const store = await ownedStore({ userId, storeId });
-  if (!store) {
+  const access = await readableStore({ userId, storeId });
+  if (!access) {
     return { error: 404 };
   }
+  const store = access.store;
   const db = await models();
-  const user = new mongoose.Types.ObjectId(String(userId));
+  const user = new mongoose.Types.ObjectId(String(access.ownerId));
   const rows = await db.MemoryDomain.find({ storeId: String(store._id) }).lean();
   const counts = await db.MemoryEntry.aggregate([
     { $match: { userId: user, storeId: String(store._id) } },
@@ -39,9 +40,10 @@ export async function listDomains({ userId, role, storeId, conversationId }) {
       activeDomainIds = convo.activeDomainIds.filter((id) => known.has(String(id)));
     }
   }
+  const writable = access.isOwner || (await writableStore({ userId, storeId: String(store._id) })) != null;
   return {
     storeId: String(store._id),
-    canWrite: true,
+    canWrite: writable,
     domains: rows.map((row) =>
       toClientDomain({ ...row, memoryCount: byDomain.get(String(row._id)) ?? 0 }),
     ),
