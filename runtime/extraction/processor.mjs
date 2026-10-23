@@ -71,6 +71,7 @@ async function attachmentsFromWrites({ userId, storeId, conversationId, messageI
   const db = await models();
   const versions = await db.MemoryVersion.find({
     storeId: String(storeId),
+    runId: String(messageId),
     createdAt: { $gte: since },
   })
     .sort({ createdAt: 1 })
@@ -135,7 +136,7 @@ export async function runExtraction({
     },
   });
   const userPrompt = await getExtractionPrompt({ userId: ownerId });
-  const [withoutKeys, processMemory] = await memory.createMemoryProcessor({
+  const [withoutKeys, processMemory, deletedKeys] = await memory.createMemoryProcessor({
     res: { headersSent: false, write() {} },
     userId: ownerId,
     storeId,
@@ -163,13 +164,28 @@ export async function runExtraction({
   }
   const startedAt = new Date();
   await processMemory(toMessages(messages), signal);
-  const attachments = await attachmentsFromWrites({
+  const updates = await attachmentsFromWrites({
     userId: ownerId,
     storeId,
     conversationId,
     messageId,
     since: startedAt,
   }).catch(() => []);
+  const deleted = new Set(deletedKeys?.() ?? []);
+  const deleteAttachments = [...deleted].map((key) => ({
+    type: 'memory',
+    messageId,
+    conversationId,
+    memory: {
+      key,
+      type: 'delete',
+      storeId: String(storeId),
+    },
+  }));
+  const attachments = [
+    ...updates.filter((attachment) => !deleted.has(attachment.memory.key)),
+    ...deleteAttachments,
+  ];
   return { attachments, withoutKeys };
 }
 

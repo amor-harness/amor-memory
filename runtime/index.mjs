@@ -1,8 +1,7 @@
 import { configureDatabase, models } from './db.mjs';
 import { ensureMemorySchema } from './recall/schema.mjs';
 import { configurePool } from './recall/vectorStore.mjs';
-import { backendInfo } from './backend/info.mjs';
-import { listOwnedMemories, listOwnedStores, ownedStore } from './backend/memories.mjs';
+import { listOwnedMemories, ownedStore } from './backend/memories.mjs';
 import { listDomains } from './backend/domains.mjs';
 import { listVersions } from './backend/history.mjs';
 import { listConversationMemories } from './backend/conversation.mjs';
@@ -12,12 +11,11 @@ import { clearStore, createStore, deleteStore, listStores, renameStore } from '.
 import { restoreVersion } from './backend/restore.mjs';
 import { deleteImage, getImageBySha, getImageByUrl } from './backend/image.mjs';
 import { getPreferences, setPreferences } from './backend/preferences.mjs';
-import { recallVectorStage } from './backend/recall.mjs';
 import { preparePluginRecall } from './backend/recall-full.mjs';
 import { prepareInjection } from './backend/injection.mjs';
 import { ingestImageBuffer, ingestImageUrl } from './backend/images.mjs';
 import { vfsDelete, vfsDomains, vfsImage, vfsList, vfsSet } from './backend/vfs.mjs';
-import { defaultStore, formattedMemories, resolveStore } from './backend/store.mjs';
+import { defaultStore, resolveStore } from './backend/store.mjs';
 import { handleProviderOperation } from './vfs/provider.mjs';
 import { domainScope, registerDomainTools } from './domain/register.mjs';
 import { extractionMethods } from './extraction/database.mjs';
@@ -78,13 +76,25 @@ export default {
       }
     })();
 
+    const disposeHooks = [];
+    const registerHook = (name, handler) => {
+      const unsubscribe = kernel.hook(name, handler);
+      if (typeof unsubscribe === 'function') {
+        disposeHooks.push(unsubscribe);
+      }
+      return unsubscribe;
+    };
+    if (typeof ctx.on === 'function') {
+      ctx.on('dispose', () => {
+        for (const unsubscribe of disposeHooks.splice(0)) {
+          unsubscribe();
+        }
+        extraction.resetMemoryExtractionState();
+      });
+    }
     registerMemoryVectorSync();
     registerDomainTools(ctx.tools);
     await kernel.call('memory.config.apply', { values });
-    ctx.kernel.expose('config.snapshot', async () => kernel.call('memory.config.snapshot', {}));
-    ctx.kernel.expose('memories.backend.info', async (_params, meta) =>
-      backendInfo({ userId: meta?.userId }),
-    );
     /** Owned stores are served by the plugin's own data layer; a store that
      *  isn't owned yet falls through to the app until ACL reads move too. */
     const localFirst = async (localFn) => localFn();
@@ -194,44 +204,6 @@ export default {
       ),
     );
 
-    ctx.kernel.expose('memories.list.local', async (params, meta) => {
-      const result = await listOwnedMemories({
-        userId: meta?.userId,
-        role: meta?.role,
-        storeId: params?.storeId,
-      });
-      if (result.error) {
-        throw Object.assign(new Error('Memory store not found.'), { status: result.error });
-      }
-      return result;
-    });
-    ctx.kernel.expose('memories.stores.local', async (_params, meta) =>
-      listOwnedStores({ userId: meta?.userId, role: meta?.role }),
-    );
-    ctx.kernel.expose('memories.domains.local', async (params, meta) =>
-      listDomains({
-        userId: meta?.userId,
-        role: meta?.role,
-        storeId: params?.storeId,
-        conversationId: params?.conversationId,
-      }),
-    );
-    ctx.kernel.expose('memories.versions.local', async (params, meta) =>
-      listVersions({
-        userId: meta?.userId,
-        role: meta?.role,
-        storeId: params?.storeId,
-        key: params?.key,
-      }),
-    );
-    ctx.kernel.expose('memories.conversation.local', async (params, meta) =>
-      listConversationMemories({
-        userId: meta?.userId,
-        role: meta?.role,
-        storeId: params?.storeId,
-        conversationId: params?.conversationId,
-      }),
-    );
     const localMutation = async (operation) => {
       const result = await operation();
       if (result.ok === true) {
@@ -486,45 +458,11 @@ export default {
     });
     /** A plugin can add to the system prompt (`stableContext`) and/or the
      *  dynamic `additional_instructions` tail (`dynamicContext`). */
-    ctx.kernel.expose('memory.store.resolve', async (params, meta) =>
-      resolveStore({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.store.default', async (_params, meta) =>
-      defaultStore({ userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.formatted', async (params, meta) =>
-      formattedMemories({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.domain.scope', async (params, meta) =>
-      domainScope({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.vfs.list', async (params, meta) =>
-      vfsList({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.vfs.domains', async (params, meta) =>
-      vfsDomains({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.vfs.set', async (params, meta) =>
-      vfsSet({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.vfs.delete', async (params, meta) =>
-      vfsDelete({ ...(params ?? {}), userId: meta?.userId }),
-    );
-    ctx.kernel.expose('memory.vfs.provider', async (params, meta) => {
-      const request = params ?? {};
-      if (meta?.userId && request.ctx?.req?.user) {
-        request.ctx.req.user.id = meta.userId;
-      }
-      return handleProviderOperation(request);
-    });
-    ctx.kernel.expose('memory.vfs.image', async (params, meta) =>
-      vfsImage({ ...(params ?? {}), userId: meta?.userId }),
-    );
     const registeredHooks = [];
     let hookError = null;
     try {
       if (typeof kernel?.hook === 'function') {
-        kernel.hook('chat.beforeRun', async (payload) => {
+        registerHook('chat.beforeRun', async (payload) => {
           if (payload?.storeId != null && payload?.conversationId != null) {
             extraction.interruptMemoryExtractions(
               extraction.getMemoryExtractionKey({
@@ -581,7 +519,7 @@ export default {
           }
         });
         registeredHooks.push('chat.beforeRun');
-        kernel.hook('conversation.deleted', async (payload) => {
+        registerHook('conversation.deleted', async (payload) => {
           await ensureActiveDatabase();
           const methodSet = await extractionMethods();
           await methodSet.deleteConversationMemories({
@@ -591,7 +529,7 @@ export default {
           return { ok: true };
         });
         registeredHooks.push('conversation.deleted');
-        kernel.hook('image.ingest', async (payload) => {
+        registerHook('image.ingest', async (payload) => {
           await ensureActiveDatabase();
           if (payload?.url != null) {
             return ingestImageUrl({ ...payload, userId: payload.userId });
@@ -602,7 +540,7 @@ export default {
           return null;
         });
         registeredHooks.push('image.ingest');
-        kernel.hook('vfs.memory', async (payload) => {
+        registerHook('vfs.memory', async (payload) => {
           await ensureActiveDatabase();
           const params = payload?.params ?? {};
           switch (payload?.method) {
@@ -625,14 +563,14 @@ export default {
           }
         });
         registeredHooks.push('vfs.memory');
-        kernel.hook('allConversations.deleted', async (payload) => {
+        registerHook('allConversations.deleted', async (payload) => {
           await ensureActiveDatabase();
           const methodSet = await extractionMethods();
           await methodSet.deleteAllConversationMemories(payload?.userId);
           return { ok: true };
         });
         registeredHooks.push('allConversations.deleted');
-        kernel.hook('conversation.compacted', async (payload) => {
+        registerHook('conversation.compacted', async (payload) => {
           await ensureActiveDatabase();
           const methodSet = await extractionMethods();
           await methodSet.deleteCompactedConversationMemories({
@@ -643,7 +581,7 @@ export default {
           return { ok: true };
         });
         registeredHooks.push('conversation.compacted');
-        kernel.hook('user.deleted', async (payload) => {
+        registerHook('user.deleted', async (payload) => {
           await ensureActiveDatabase();
           const methodSet = await extractionMethods();
           await methodSet.deleteAllUserMemories(payload?.userId);
@@ -652,7 +590,7 @@ export default {
           return { ok: true };
         });
         registeredHooks.push('user.deleted');
-        kernel.hook('prompt.inject', async (payload) => {
+        registerHook('prompt.inject', async (payload) => {
           if (payload?.storeId == null) {
             return null;
           }
@@ -677,7 +615,7 @@ export default {
           }
         });
         registeredHooks.push('prompt.inject');
-        kernel.hook('chat.afterRun', async (payload) => {
+        registerHook('chat.afterRun', async (payload) => {
           if (
             payload?.storeId == null ||
             payload?.llmConfig == null ||
@@ -739,36 +677,6 @@ export default {
     } catch (error) {
       hookError = error instanceof Error ? error.message : String(error);
     }
-    ctx.kernel.expose('memory.image.ingest', async (params, meta) => {
-      const userId = meta?.userId;
-      if (params?.url != null) {
-        return ingestImageUrl({ ...params, userId });
-      }
-      if (params?.data != null) {
-        return ingestImageBuffer({
-          ...params,
-          userId,
-          buffer: Buffer.from(params.data, 'base64'),
-        });
-      }
-      return { ok: false, skipped: true };
-    });
-    ctx.kernel.expose('memories.recall.plugin', async (params, meta) =>
-      preparePluginRecall({
-        ...params,
-        userId: meta?.userId,
-        collectDiagnostics: params?.collectDiagnostics === true,
-      }),
-    );
-    ctx.kernel.expose('memories.recall.local', async (params, meta) => {
-      await ensureActiveDatabase();
-      return recallVectorStage({
-        userId: meta?.userId,
-        storeId: params?.storeId,
-        domainIds: params?.domainIds,
-        query: params?.query,
-      });
-    });
     ctx.kernel.expose('memories.stores', async (_params, meta) =>
       listStores({ userId: meta?.userId, role: meta?.role }),
     );

@@ -30,6 +30,7 @@ test('builds memory update attachments from versions written during extraction',
     value: 'a dream',
     tags: ['dream'],
     storeId: 'store-1',
+    runId: 'msg-1',
     createdAt,
   });
   const attachments = await attachmentsFromWrites({

@@ -28,6 +28,7 @@ test('set_memory writes through the original tool and returns an artifact', asyn
   const result = await tool.invoke({ key: 'tea_preference', value: 'loves tea' });
   assert.equal(writes.length, 1);
   assert.equal(writes[0].key, 'tea_preference');
+  assert.equal(writes[0].runId, undefined);
   assert.ok(result.includes('tea_preference') || typeof result === 'string');
 });
 
@@ -64,4 +65,33 @@ test('delete_memory refuses stable memories by default', async () => {
   );
   const result = await tool.invoke({ key: 'stable' });
   assert.match(result, /stable/i);
+});
+
+test('delete_memory records a successful deletion for the run', async () => {
+  const deletedKeys = new Set();
+  const tool = memory.createDeleteMemoryTool(
+    baseArgs({
+      deleteMemory: async () => ({ ok: true }),
+      getUserMemories: async () => [{ key: 'old', locked: false }],
+      deletedKeys,
+    }),
+  );
+  await tool.invoke({ key: 'old' });
+  assert.deepEqual([...deletedKeys], ['old']);
+});
+
+test('set_memory carries the extraction turn id', async () => {
+  const writes = [];
+  const tool = memory.createMemoryTool(
+    baseArgs({
+      turnMessageId: 'msg-1',
+      setMemory: async (params) => {
+        writes.push(params);
+        return { ok: true };
+      },
+      getUserMemories: async () => [],
+    }),
+  );
+  await tool.invoke({ key: 'run_id_test', value: 'value' });
+  assert.equal(writes[0].runId, 'msg-1');
 });

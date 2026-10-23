@@ -222,7 +222,8 @@ const createMemoryTool = ({
             tokenCount,
             storeId,
             domainId,
-            defaultDomainId: implicitDomainId
+            defaultDomainId: implicitDomainId,
+            runId: turnMessageId
           });
           if (result.ok) {
             const artifactBody = artifact[Tools.memory];
@@ -291,7 +292,8 @@ const createDeleteMemoryTool = ({
   storeId,
   deleteMemory,
   getUserMemories,
-  validKeys
+  validKeys,
+  deletedKeys
 }) => {
   return tool(
     async ({ key }) => {
@@ -330,6 +332,7 @@ const createDeleteMemoryTool = ({
         };
         const result = await deleteMemory({ userId, key, storeId });
         if (result.ok) {
+          deletedKeys?.add(key);
           logger.debug(`Memory deleted for key "${key}" for user "${userId}"`);
           return [`Memory deleted for key "${key}"`, artifact];
         }
@@ -556,7 +559,8 @@ async function processMemory({
   user,
   appConfig,
   tenantId,
-  signal
+  signal,
+  deletedKeys
 }) {
   try {
     const memoryTool = createMemoryTool({
@@ -584,6 +588,7 @@ async function processMemory({
       storeId,
       validKeys,
       deleteMemory,
+      deletedKeys,
       ...getUserMemories ? { getUserMemories } : {}
     });
     const memoryTools = [memoryTool, deleteMemoryTool];
@@ -794,6 +799,7 @@ async function createMemoryProcessor({
   resolveDomains
 }) {
   const { validKeys, instructions, llmConfig, tokenLimit } = config;
+  const deletedKeys = new Set();
   const finalInstructions = replaceSpecialVars({
     text: `${instructions || getDefaultInstructions(validKeys, tokenLimit)}
 
@@ -858,6 +864,7 @@ ${MEMORY_KEY_FORMAT_HINT}`,
           storeId,
           messages,
           signal,
+          deletedKeys,
           validKeys,
           llmConfig,
           messageId,
@@ -883,7 +890,8 @@ ${MEMORY_KEY_FORMAT_HINT}`,
       } catch (error) {
         logger.error("Memory Agent failed to process memory", error);
       }
-    }
+    },
+    () => [...deletedKeys]
   ];
 }
 async function handleMemoryArtifact({

@@ -214,6 +214,7 @@ async function recordMemoryVersion(mongoose, snapshot) {
       stable: snapshot.stable === true,
       injection: snapshot.injection === "additional" ? "additional" : "system",
       locked: snapshot.locked === true,
+      ...snapshot.runId ? { runId: String(snapshot.runId) } : {},
       createdAt: /* @__PURE__ */ new Date()
     });
     if (kept.length === MAX_MEMORY_VERSIONS) {
@@ -444,7 +445,8 @@ function createMemoryMethods(mongoose, appMongoose = mongoose) {
     stable,
     injection,
     locked,
-    allowLocked = false
+    allowLocked = false,
+    runId
   }) {
     try {
       if (key?.toLowerCase() === "nothing") {
@@ -512,7 +514,8 @@ function createMemoryMethods(mongoose, appMongoose = mongoose) {
           tokenCount,
           stable: updated.stable === true,
           injection: injectionOf(updated.injection),
-          locked: updated.locked === true
+          locked: updated.locked === true,
+          ...runId ? { runId: String(runId) } : {}
         });
       }
       emitMemoryChange({

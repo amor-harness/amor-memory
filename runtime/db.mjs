@@ -63,6 +63,7 @@ const memoryVersionSchema = new Schema({
   injection: { type: String, enum: ['system', 'additional'], default: 'system' },
   locked: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
+  runId: { type: String, index: true },
   tenantId,
 });
 memoryVersionSchema.index({ memoryId: 1, createdAt: -1 });
